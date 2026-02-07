@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="fr">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,6 +13,7 @@
   <link rel="stylesheet" href="../assets/style.css">
   <link rel="stylesheet" href="../assets/carte-styles.css">
 </head>
+
 <body>
   <div class="container">
     <header>
@@ -27,11 +29,7 @@
 
     <!-- Filtres de recherche -->
     <div class="search-controls">
-      <input
-        type="text"
-        id="search-input"
-        placeholder="Rechercher dans toutes les colonnes…"
-      >
+      <input type="text" id="search-input" placeholder="Rechercher dans toutes les colonnes…">
 
       <select id="filter-heresy">
         <option value="">Rapport avec l'hérésie</option>
@@ -46,19 +44,18 @@
       </select>
     </div>
 
-    <!-- Statistiques de la carte -->
-    <div class="map-stats">
-      <div class="stat-item">
-        <span class="stat-label">Cas affichés :</span>
-        <span class="stat-value" id="map-cases-count">0</span>
-      </div>
-      <div class="stat-item">
-        <span class="stat-label">Diocèses :</span>
-        <span class="stat-value" id="map-dioceses-count">0</span>
-      </div>
-    </div>
-
     <div class="map-container">
+      <!-- Statistiques de la carte -->
+      <div class="map-stats">
+        <div class="stat-item">
+          <span class="stat-label">Cas affichés :</span>
+          <span class="stat-value" id="map-cases-count">0</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">Diocèses :</span>
+          <span class="stat-value" id="map-dioceses-count">0</span>
+        </div>
+      </div>
       <div id="map"></div>
     </div>
   </div>
@@ -69,4 +66,5 @@
   <!-- JS du site (on remonte d'un niveau) -->
   <script src="../assets/script-carte.js"></script>
 </body>
+
 </html>
