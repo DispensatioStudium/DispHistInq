@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DispHistInq - Accueil</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>DispHistInq</h1>
+      <p class="subtitle">Exploration des dispenses historiques de l'Inquisition</p>
+    </header>
+
+    <nav class="tabs">
+      <a class="tab-button active" href="index.html">Accueil</a>
+      <a class="tab-button" href="pages/donnees.html">Explorer les données</a>
+      <a class="tab-button" href="pages/carte.html">Carte géographique</a>
+    </nav>
+
+    <div class="welcome-section">
+      <h2>Bienvenue sur DispHistInq</h2>
+      <p>
+        Ce site permet d'explorer et de visualiser les données relatives aux dispenses historiques 
+        accordées ou refusées dans le cadre des procédures inquisitoriales. Le projet DispHistInq 
+        rassemble des informations précieuses sur les requérants, les types de dispenses demandées, 
+        les résultats obtenus et les contextes géographiques de ces demandes.
+      </p>
+      <p>
+        À travers les onglets ci-dessus, vous pouvez explorer l'ensemble des cas recensés dans notre 
+        base de données, filtrer et rechercher selon différents critères, et visualiser la répartition 
+        géographique des diocèses d'origine sur une carte interactive.
+      </p>
+    </div>
+
+    <div class="stats" id="stats">
+      <div class="stat-card">
+        <div class="stat-number" id="total-cases">-</div>
+        <div class="stat-label">Cas total</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" id="total-dioceses">-</div>
+        <div class="stat-label">Diocèses</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" id="total-years">-</div>
+        <div class="stat-label">Période</div>
+      </div>
+    </div>
+  </div>
+
+  <script src="assets/script.js"></script>
+</body>
+</html>

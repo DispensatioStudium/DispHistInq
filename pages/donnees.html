@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DispHistInq – Explorer les données</title>
+
+  <!-- CSS principal -->
+  <link rel="stylesheet" href="../assets/style.css">
+
+  <!-- Leaflet CSS (OBLIGATOIRE car carte dans la modale) -->
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  >
+</head>
+<body>
+  <div class="container">
+
+    <header>
+      <h1>DispHistInq</h1>
+    </header>
+
+    <nav class="tabs">
+      <a class="tab-button" href="../index.html">Accueil</a>
+      <a class="tab-button active" href="donnees.html">Explorer les données</a>
+      <a class="tab-button" href="carte.html">Carte géographique</a>
+    </nav>
+
+    <div class="search-controls">
+      <input
+        type="text"
+        id="search-input"
+        placeholder="Rechercher dans toutes les colonnes…"
+      >
+
+      <select id="filter-heresy">
+        <option value="">Rapport avec l’hérésie</option>
+      </select>
+
+      <select id="filter-year">
+        <option value="">Toutes les années</option>
+      </select>
+
+      <select id="filter-result">
+        <option value="">Tous les résultats</option>
+      </select>
+    </div>
+
+    <div class="table-container">
+      <div class="table-wrapper">
+        <table id="data-table">
+          <thead>
+            <tr id="table-header"></tr>
+          </thead>
+          <tbody id="table-body">
+            <tr>
+              <td colspan="100" class="loading">Chargement des données…</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="pagination">
+      <button id="prev-page">Précédent</button>
+      <span class="current-page" id="page-info">Page 1</span>
+      <button id="next-page">Suivant</button>
+    </div>
+
+  </div>
+
+  <!-- Leaflet JS (AVANT ton script) -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <!-- Script tableau -->
+  <script src="../assets/script-tableau.js"></script>
+</body>
+</html>

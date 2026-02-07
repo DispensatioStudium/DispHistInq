@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DispHistInq - Carte géographique</title>
+
+  <!-- Leaflet -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+  <!-- CSS du site (on remonte d’un niveau) -->
+  <link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>DispHistInq</h1>
+      <p class="subtitle">Carte géographique</p>
+    </header>
+
+    <nav class="tabs">
+      <a class="tab-button" href="../index.html">Accueil</a>
+      <a class="tab-button" href="donnees.html">Explorer les données</a>
+      <a class="tab-button active" href="carte.html">Carte géographique</a>
+    </nav>
+
+    <div class="map-container">
+      <div id="map"></div>
+    </div>
+  </div>
+
+  <!-- Leaflet -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <!-- JS du site (on remonte d’un niveau) -->
+  <script src="../assets/script.js"></script>
+</body>
+</html>
