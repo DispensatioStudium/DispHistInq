@@ -2,6 +2,56 @@ let modalMap = null;
 let modalMarkers = [];
 let coordIndex = {};
 
+// =====================
+// DICTIONNAIRE D'EN-TÊTES
+// =====================
+const headerLabels = {
+    'cas-id': 'ID',
+    'source': 'Source',
+    'folio': 'Folio',
+    'nom_requerant.e': 'Requérant·e',
+    'identite_eccl': 'Identité ecclésiastique',
+    'genre': 'Genre',
+    'ordre_religieux': 'Ordre religieux',
+    'diocese_origine': 'Diocèse d\'origine',
+    'diocese_origine_fr': 'Diocèse d\'origine (FR)',
+    'diocese_origine_lat': 'Diocèse d\'origine (Lat)',
+    'pays': 'Pays',
+    'annee': 'Année',
+    'durée_cause_mois': 'Durée (mois)',
+    'type_de_dispense_harmonise': 'Type de dispense',
+    'resultat_dispense': 'Résultat',
+    'cause_de_demande': 'Cause de la demande',
+    'justification_demande_SO': 'Justification de la demande au Saint-Office',
+    'Liens_autres_congregations': 'Liens autres congrégations',
+    'heresie': 'Hérésie',
+    'nombre_acteurs_ext': 'Nb acteurs',
+    'nom_acteur_1_statut': 'Acteur 1 - Statut',
+    'nom_acteur_2_statut': 'Acteur 2 - Statut',
+    'nom_acteur_3_statut': 'Acteur 3 - Statut',
+    'nom_acteur_4_statut': 'Acteur 4 - Statut',
+    'nom_acteur_5_statut': 'Acteur 5 - Statut',
+    'nom_acteur_6_statut': 'Acteur 6 - Statut',
+    'nom_acteur_7_statut': 'Acteur 7 - Statut',
+    'nom_acteur_8_statut': 'Acteur 8 - Statut',
+    'nom_acteur_9_statut': 'Acteur 9 - Statut',
+    'nom_acteur_10_statut': 'Acteur 10 - Statut',
+    'nom_acteur_11_statut': 'Acteur 11 - Statut',
+    'documents_annexes': 'Documents annexes',
+    'Nature_doc_1': 'Nature doc. 1',
+    'Nature_doc_2': 'Nature doc. 2',
+    'Nature_doc_3': 'Nature doc. 3',
+    'Nature_doc_4': 'Nature doc. 4',
+    'Nature_doc_5': 'Nature doc. 5',
+    'Nature_doc_6': 'Nature doc. 6',
+    'Nature_doc_7': 'Nature doc. 7',
+    'demandes_multiples': 'Demandes multiples'
+};
+
+function getHeaderLabel(key) {
+    return headerLabels[key] || key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+}
+
 document.addEventListener("DOMContentLoaded", async () => {
     await initData();
     renderTable();
@@ -72,6 +122,7 @@ const excludeColumns = [
     'Nature_doc_6',
     'Nature_doc_7'
 ];
+
 
 // =====================
 // Chargement CSV
@@ -269,11 +320,12 @@ function renderTable() {
 
     const headers = Object.keys(allData[0]).filter(h => !excludeColumns.includes(h));
 
-    headerRow.innerHTML = headers.map(h =>
-        (h === 'source' || h === 'cause_de_demande')
-            ? `<th class="wide-col">${escapeHtml(h)}</th>`
-            : `<th>${escapeHtml(h)}</th>`
-    ).join('');
+    // Créer les en-têtes avec libellés améliorés
+    headerRow.innerHTML = headers.map(h => {
+        const label = getHeaderLabel(h);
+        const wideClass = (h === 'source' || h === 'cause_de_demande' || h === 'nom_requerant.e' || h === 'type_de_dispense_harmonise') ? 'class="wide-col"' : '';
+        return `<th ${wideClass}>${escapeHtml(label)}</th>`;
+    }).join('');
 
     const start = (currentPage - 1) * rowsPerPage;
     const pageData = filteredData.slice(start, start + rowsPerPage);
@@ -287,8 +339,11 @@ function renderTable() {
     tbody.innerHTML = pageData.map((row, i) => `
         <tr class="clickable-row" data-index="${start + i}">
             ${headers.map(h => {
-                const wide = (h === 'source' || h === 'cause_de_demande') ? 'class="wide-col"' : '';
-                return `<td ${wide}>${escapeHtml(row[h] || '')}</td>`;
+                const wide = (h === 'source' || h === 'cause_de_demande' || h === 'nom_requerant.e' || h === 'type_de_dispense_harmonise') ? 'class="wide-col"' : '';
+                const value = row[h] || '';
+                // Tronquer le texte long et ajouter ...
+                const displayValue = value.length > 100 ? value.substring(0, 97) + '...' : value;
+                return `<td ${wide}>${escapeHtml(displayValue)}</td>`;
             }).join('')}
         </tr>
     `).join('');
@@ -351,11 +406,12 @@ function openCaseModal(row) {
 
     const mapId = 'modal-map-' + Date.now();
 
+    // Afficher les informations avec des libellés lisibles
     const infoHTML = Object.entries(row)
         .filter(([k, v]) => v && v.toString().trim() !== '')
         .map(([k, v]) => `
             <div class="info-row">
-                <div class="info-key">${escapeHtml(k)}</div>
+                <div class="info-key">${escapeHtml(getHeaderLabel(k))}</div>
                 <div class="info-value">${escapeHtml(String(v))}</div>
             </div>
         `).join('');
@@ -441,23 +497,17 @@ async function resolvePlace(place) {
 }
 
 async function initModalMap(row, mapId) {
-    // Vérifier que Leaflet est chargé
-    if (typeof L === 'undefined') {
-        console.error('Leaflet n\'est pas chargé');
-        return;
+    // Supprimer l'ancienne carte si elle existe
+    if (modalMap) {
+        modalMap.remove();
+        modalMap = null;
+        modalMarkers = [];
     }
 
-    const mapElement = document.getElementById(mapId);
-    if (!mapElement) {
-        console.error(`Élément de carte ${mapId} introuvable`);
-        return;
-    }
-
-    modalMap = L.map(mapId).setView([46.5, 2.5], 5);
+    modalMap = L.map(mapId);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap contributors',
-        maxZoom: 19
+        attribution: '© OpenStreetMap'
     }).addTo(modalMap);
 
     const placeRaw =
@@ -465,10 +515,7 @@ async function initModalMap(row, mapId) {
         row.diocese_origine ||
         row.pays;
 
-    if (!placeRaw || placeRaw.trim() === '') {
-        console.log('Aucun lieu à afficher');
-        return;
-    }
+    if (!placeRaw) return;
 
     const places = placeRaw
         .split(',')
@@ -477,37 +524,39 @@ async function initModalMap(row, mapId) {
 
     const bounds = [];
 
+    // Parcourir toutes les places avec resolvePlace()
     for (const place of places) {
-        const result = await resolvePlace(place);
-        if (!result) {
-            console.log(`Impossible de résoudre: ${place}`);
-            continue;
-        }
+        const resolved = await resolvePlace(place);
+        if (!resolved) return;
 
-        const coords = [result.lat, result.lon];
+        const coords = [resolved.lat, resolved.lon];
 
         const marker = L.marker(coords)
             .addTo(modalMap)
-            .bindPopup(escapeHtml(result.label));
+            .bindPopup(resolved.label);
 
         modalMarkers.push(marker);
         bounds.push(coords);
-    }
 
-    if (bounds.length > 0) {
-        if (bounds.length === 1) {
-            // Un seul marqueur - centrer avec un zoom approprié
-            modalMap.setView(bounds[0], 10);
-        } else {
-            // Plusieurs marqueurs - ajuster les limites
+        // Définir un zoom par défaut selon le lieu
+        let zoom = 7; // zoom normal
+        const lowerPlace = place.toLowerCase();
+        if (
+            lowerPlace.includes("amérique") ||
+            lowerPlace.includes("france") ||
+            lowerPlace.includes("allemagne") ||
+            lowerPlace.includes("angleterre") ||
+            lowerPlace.startsWith("province")
+        ) {
+            zoom = 5; // moins zoomé pour les pays ou régions larges
+        }
+
+        if (bounds.length > 1) {
             modalMap.fitBounds(bounds, { padding: [40, 40] });
+        } else {
+            modalMap.setView(coords, zoom);
         }
     }
 
-    // Forcer le redimensionnement de la carte
-    setTimeout(() => {
-        if (modalMap) {
-            modalMap.invalidateSize();
-        }
-    }, 200);
+    setTimeout(() => modalMap.invalidateSize(), 200);
 }
