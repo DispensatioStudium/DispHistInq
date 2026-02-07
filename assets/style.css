@@ -447,152 +447,251 @@ tbody tr:nth-child(even):hover {
     }
 }
 
-/* MODAL ET CARTE - STYLES GLOBAUX (EN DEHORS DU MEDIA QUERY) */
+/* =====================
+   MODAL OVERLAY
+   ===================== */
 .modal-overlay {
     position: fixed;
     top: 0;
     left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.7);
+    right: 0;
+    bottom: 0;
+    z-index: 9999;
     display: flex;
-    justify-content: center;
     align-items: center;
-    z-index: 1000;
+    justify-content: center;
+    padding: 20px;
 }
 
-.modal-box {
-    background: white;
-    border-radius: 8px;
-    width: 90%;
-    max-width: 1200px;
-    max-height: 90vh;
-    overflow: hidden;
+.modal-overlay-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(4px);
+}
+
+/* =====================
+   MODAL CONTAINER
+   ===================== */
+.modal-container {
     position: relative;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    background: #1a1f2e;
+    border-radius: 16px;
+    width: 100%;
+    max-width: 1400px;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* =====================
+   MODAL HEADER
+   ===================== */
+.modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 24px 32px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.modal-title {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 600;
+    color: #ffffff;
 }
 
 .modal-close {
-    position: absolute;
-    top: 15px;
-    right: 15px;
-    background: #6b2737;
-    color: white;
+    background: rgba(255, 255, 255, 0.1);
     border: none;
-    border-radius: 50%;
-    width: 35px;
-    height: 35px;
-    font-size: 20px;
+    color: #ffffff;
+    font-size: 24px;
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
     cursor: pointer;
-    z-index: 10;
-    transition: background 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
 }
 
 .modal-close:hover {
-    background: #8b3747;
+    background: rgba(255, 255, 255, 0.2);
+    transform: scale(1.05);
 }
 
-.modal-content {
+/* =====================
+   MODAL BODY
+   ===================== */
+.modal-body {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 20px;
-    padding: 20px;
-    max-height: calc(90vh - 40px);
+    gap: 32px;
+    padding: 32px;
     overflow-y: auto;
+    max-height: calc(90vh - 100px);
 }
 
-.modal-info {
-    padding-right: 10px;
+.modal-left,
+.modal-right {
+    display: flex;
+    flex-direction: column;
 }
 
-.info-row {
-    margin-bottom: 15px;
-    border-bottom: 1px solid #eee;
-    padding-bottom: 10px;
-}
-
-.info-key {
+/* =====================
+   SECTIONS
+   ===================== */
+.section-title {
+    font-size: 18px;
     font-weight: 600;
-    color: #6b2737;
-    font-size: 0.9em;
-    margin-bottom: 5px;
+    color: #ffffff;
+    margin-bottom: 16px;
 }
 
-.info-value {
-    color: #333;
-    line-height: 1.5;
+.map-info {
+    font-size: 14px;
+    margin-bottom: 8px;
+    display: flex;
+    gap: 8px;
 }
 
-.modal-map {
-    height: 500px;
-    width: 100%;
+.map-info-label {
+    color: rgba(255, 255, 255, 0.6);
+    font-weight: 500;
 }
 
-.modal-map > div {
-    width: 100%;
-    height: 100%;
+.map-info-value {
+    color: #ffffff;
+    font-weight: 400;
 }
 
-/* Responsive */
-@media (max-width: 768px) {
-    h1 {
-        font-size: 2.5rem;
-    }
+/* =====================
+   DETAILS GRID
+   ===================== */
+.details-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
 
-    .subtitle {
-        font-size: 1.1rem;
-    }
+.detail-item {
+    display: grid;
+    grid-template-columns: 140px 1fr;
+    gap: 16px;
+    align-items: start;
+}
 
-    .tabs {
-        overflow-x: auto;
-    }
+.detail-item-long {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
 
-    .tab-button {
-        padding: 0.75rem 1.25rem;
-        font-size: 1rem;
-    }
+.detail-label {
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.6);
+    font-weight: 500;
+}
 
-    .welcome-section {
-        padding: 2rem;
-    }
+.detail-value {
+    font-size: 14px;
+    color: #ffffff;
+    word-wrap: break-word;
+}
 
-    .search-controls {
-        flex-direction: column;
-        align-items: stretch;
-    }
+.detail-item-long .detail-value {
+    line-height: 1.6;
+    padding: 12px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 6px;
+    border-left: 3px solid rgba(100, 150, 255, 0.5);
+}
 
-    .search-controls input {
-        min-width: 100%;
-    }
+/* =====================
+   MAP CONTAINER
+   ===================== */
+.modal-map-container {
+    flex: 1;
+    min-height: 400px;
+    background: #0f1419;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    margin-top: 12px;
+}
 
-    table {
-        font-size: 0.85rem;
-    }
-
-    th,
-    td {
-        padding: 0.75rem 0.5rem;
-    }
-
-    #map {
-        height: 400px;
-    }
-
-    /* Modal responsive */
-    .modal-content {
+/* =====================
+   RESPONSIVE
+   ===================== */
+@media (max-width: 1024px) {
+    .modal-body {
         grid-template-columns: 1fr;
     }
     
-    .modal-map {
-        height: 400px;
+    .modal-map-container {
+        min-height: 300px;
+    }
+}
+
+@media (max-width: 768px) {
+    .modal-container {
+        max-width: 95%;
     }
     
-    .modal-box {
-        width: 95%;
-        max-height: 95vh;
+    .modal-header {
+        padding: 16px 20px;
     }
+    
+    .modal-title {
+        font-size: 20px;
+    }
+    
+    .modal-body {
+        padding: 20px;
+        gap: 24px;
+    }
+    
+    .detail-item {
+        grid-template-columns: 1fr;
+        gap: 4px;
+    }
+}
 
-    .modal-close {
-    pointer-events: auto;
-    }
+/* =====================
+   SCROLLBAR STYLING
+   ===================== */
+.modal-body::-webkit-scrollbar {
+    width: 8px;
+}
+
+.modal-body::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 4px;
+}
+
+.modal-body::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+}
+
+.modal-body::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
 }

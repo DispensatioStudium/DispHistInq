@@ -96,6 +96,8 @@ let allData = [];
 let filteredData = [];
 let currentPage = 1;
 const rowsPerPage = 20;
+let sortColumn = null;
+let sortDirection = 'asc'; // 'asc' ou 'desc'
 
 // Colonnes exclues du tableau principal
 const excludeColumns = [
@@ -121,6 +123,12 @@ const excludeColumns = [
     'Nature_doc_5',
     'Nature_doc_6',
     'Nature_doc_7'
+];
+
+// Colonnes exclues du popup modal
+const excludeModalColumns = [
+    'diocese_origine',
+    'diocese_origine_lat'
 ];
 
 
@@ -304,6 +312,41 @@ function filterData() {
 // =====================
 // Tableau
 // =====================
+function sortData(column) {
+    // Si on clique sur la même colonne, inverser la direction
+    if (sortColumn === column) {
+        sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+    } else {
+        sortColumn = column;
+        sortDirection = 'asc';
+    }
+
+    filteredData.sort((a, b) => {
+        let valA = a[column] || '';
+        let valB = b[column] || '';
+
+        // Détecter si c'est un nombre
+        const numA = parseFloat(valA);
+        const numB = parseFloat(valB);
+        
+        if (!isNaN(numA) && !isNaN(numB)) {
+            // Tri numérique
+            return sortDirection === 'asc' ? numA - numB : numB - numA;
+        } else {
+            // Tri alphabétique (insensible à la casse)
+            valA = String(valA).toLowerCase();
+            valB = String(valB).toLowerCase();
+            
+            if (valA < valB) return sortDirection === 'asc' ? -1 : 1;
+            if (valA > valB) return sortDirection === 'asc' ? 1 : -1;
+            return 0;
+        }
+    });
+
+    currentPage = 1;
+    renderTable();
+}
+
 function renderTable() {
     const headerRow = document.getElementById('table-header');
     const tbody = document.getElementById('table-body');
@@ -320,12 +363,28 @@ function renderTable() {
 
     const headers = Object.keys(allData[0]).filter(h => !excludeColumns.includes(h));
 
-    // Créer les en-têtes avec libellés améliorés
+    // Créer les en-têtes avec libellés améliorés et indicateurs de tri
     headerRow.innerHTML = headers.map(h => {
         const label = getHeaderLabel(h);
-        const wideClass = (h === 'source' || h === 'cause_de_demande' || h === 'nom_requerant.e' || h === 'type_de_dispense_harmonise') ? 'class="wide-col"' : '';
-        return `<th ${wideClass}>${escapeHtml(label)}</th>`;
+        const wideClass = (h === 'source' || h === 'cause_de_demande' || h === 'nom_requerant.e' || h === 'type_de_dispense_harmonise') ? 'class="wide-col sortable"' : 'class="sortable"';
+        
+        // Ajouter un indicateur de tri si cette colonne est triée
+        let sortIndicator = '';
+        if (sortColumn === h) {
+            sortIndicator = sortDirection === 'asc' ? ' ▲' : ' ▼';
+        }
+        
+        return `<th ${wideClass} data-column="${escapeHtml(h)}">${escapeHtml(label)}${sortIndicator}</th>`;
     }).join('');
+
+    // Ajouter les écouteurs d'événements sur les en-têtes
+    headerRow.querySelectorAll('th.sortable').forEach(th => {
+        th.style.cursor = 'pointer';
+        th.addEventListener('click', () => {
+            const column = th.dataset.column;
+            sortData(column);
+        });
+    });
 
     const start = (currentPage - 1) * rowsPerPage;
     const pageData = filteredData.slice(start, start + rowsPerPage);
@@ -406,23 +465,113 @@ function openCaseModal(row) {
 
     const mapId = 'modal-map-' + Date.now();
 
-    // Afficher les informations avec des libellés lisibles
-    const infoHTML = Object.entries(row)
-        .filter(([k, v]) => v && v.toString().trim() !== '')
-        .map(([k, v]) => `
-            <div class="info-row">
-                <div class="info-key">${escapeHtml(getHeaderLabel(k))}</div>
-                <div class="info-value">${escapeHtml(String(v))}</div>
+    // Titre principal : ID - Nom (Date)
+    const casId = row['cas-id'] || '';
+    const nomRequerant = row['nom_requerant.e'] || '';
+    const annee = row['annee'] || '';
+    const mainTitle = `${casId}${casId && nomRequerant ? ' — ' : ''}${nomRequerant}${annee ? ` (${annee})` : ''}`;
+
+    // Informations pour la carte
+    const dioceseOrigine = row['diocese_origine_fr'] || '';
+    const pays = row['pays'] || '';
+
+    // Préparer les groupes d'informations dans l'ordre spécifié
+    const detailsInfo = [];
+    
+    // Ordre spécifique des champs
+    const orderedFields = [
+        { key: 'folio', label: 'Folio' },
+        { key: 'nom_requerant.e', label: 'Requérant·e' },
+        { key: 'genre', label: 'Genre' },
+        { key: 'ordre_religieux', label: 'Ordre religieux' },
+        { key: 'annee', label: 'Année' },
+        { key: 'heresie', label: 'Hérésie', isLong: true },
+        { key: 'type_de_dispense_harmonise', label: 'Type de dispense', isLong: true },
+        { key: 'resultat_dispense', label: 'Résultat', isLong: true },
+        { key: 'cause_de_demande', label: 'Cause de la demande', isLong: true },
+        { key: 'justification_demande_SO', label: 'Justification' },
+        { key: 'source', label: 'Source' },
+        { key: 'Liens_autres_congregations', label: 'Liens autres congrégations' },
+        { key: 'demandes_multiples', label: 'Demandes multiples' }
+    ];
+
+    // Ajouter les champs ordonnés
+    orderedFields.forEach(({ key, label, isLong }) => {
+        if (row[key] && row[key].toString().trim() !== '') {
+            detailsInfo.push({ label, value: row[key], isLong });
+        }
+    });
+
+    // Ajouter les autres champs (acteurs, documents, etc.)
+    const additionalFields = [
+        'nombre_acteurs_ext',
+        'nom_acteur_1_statut',
+        'nom_acteur_2_statut',
+        'nom_acteur_3_statut',
+        'nom_acteur_4_statut',
+        'nom_acteur_5_statut',
+        'nom_acteur_6_statut',
+        'nom_acteur_7_statut',
+        'nom_acteur_8_statut',
+        'nom_acteur_9_statut',
+        'nom_acteur_10_statut',
+        'nom_acteur_11_statut',
+        'documents_annexes',
+        'Nature_doc_1',
+        'Nature_doc_2',
+        'Nature_doc_3',
+        'Nature_doc_4',
+        'Nature_doc_5',
+        'Nature_doc_6',
+        'Nature_doc_7'
+    ];
+
+    additionalFields.forEach(key => {
+        if (row[key] && row[key].toString().trim() !== '' && !excludeModalColumns.includes(key)) {
+            const label = getHeaderLabel(key);
+            detailsInfo.push({ label, value: row[key], isLong: false });
+        }
+    });
+
+    // Générer le HTML des détails
+    const detailsHTML = detailsInfo.map(({ label, value, isLong }) => {
+        if (isLong) {
+            return `
+                <div class="detail-item detail-item-long">
+                    <div class="detail-label">${escapeHtml(label)}</div>
+                    <div class="detail-value">${escapeHtml(String(value))}</div>
+                </div>
+            `;
+        }
+        return `
+            <div class="detail-item">
+                <span class="detail-label">${escapeHtml(label)}</span>
+                <span class="detail-value">${escapeHtml(String(value))}</span>
             </div>
-        `).join('');
+        `;
+    }).join('');
 
     modal.innerHTML = `
-        <div class="modal-box">
-            <button class="modal-close" aria-label="Fermer">✕</button>
-            <div class="modal-content">
-                <div class="modal-info">${infoHTML}</div>
-                <div class="modal-map">
-                    <div id="${mapId}" style="height: 100%; width: 100%;"></div>
+        <div class="modal-overlay-bg"></div>
+        <div class="modal-container">
+            <div class="modal-header">
+                <h2 class="modal-title">${escapeHtml(mainTitle)}</h2>
+                <button class="modal-close" aria-label="Fermer">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-left">
+                    <div class="section-title">Détails</div>
+                    <div class="details-grid">
+                        ${detailsHTML}
+                    </div>
+                </div>
+                <div class="modal-right">
+                    <div class="section-title">Carte d'origine</div>
+                    ${dioceseOrigine ? `<div class="map-info"><span class="map-info-label">Diocèse d'origine :</span> <span class="map-info-value">${escapeHtml(dioceseOrigine)}</span></div>` : ''}
+                    ${pays ? `<div class="map-info"><span class="map-info-label">Pays :</span> <span class="map-info-value">${escapeHtml(pays)}</span></div>` : ''}
+                    <div class="modal-map-container">
+                        <div id="${mapId}" style="height: 100%; width: 100%; border-radius: 8px;"></div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -442,11 +591,7 @@ function openCaseModal(row) {
     modal.querySelector('.modal-close').onclick = closeModal;
     
     // Fermer en cliquant sur l'overlay
-    modal.addEventListener('click', (e) => {
-        if (e.target === modal) {
-            closeModal();
-        }
-    });
+    modal.querySelector('.modal-overlay-bg').addEventListener('click', closeModal);
 
     // Fermer avec la touche Échap
     const handleEscape = (e) => {
