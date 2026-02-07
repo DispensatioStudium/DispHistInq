@@ -1,0 +1,10 @@
+# macOS
+.DS_Store
+
+# Python
+*.py
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
