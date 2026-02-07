@@ -591,4 +591,8 @@ tbody tr:nth-child(even):hover {
         width: 95%;
         max-height: 95vh;
     }
+
+    .modal-close {
+    pointer-events: auto;
+    }
 }

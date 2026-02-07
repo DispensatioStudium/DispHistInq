@@ -1,3 +1,7 @@
+let modalMap = null;
+let modalMarkers = [];
+let coordIndex = {};
+
 document.addEventListener("DOMContentLoaded", async () => {
     await initData();
     renderTable();
@@ -47,6 +51,7 @@ const rowsPerPage = 20;
 const excludeColumns = [
     'diocese_origine',
     'diocese_origine_lat',
+    'diocese_origine_lon', 
     'nom_acteur_1_statut',
     'nom_acteur_2_statut',
     'nom_acteur_3_statut',
@@ -133,14 +138,30 @@ function parseLine(line) {
 // Initialisation
 // =====================
 async function initData() {
-    // CORRECTION: Chemin relatif correct depuis pages/donnees.html
     allData = await loadCSV('../data/data.csv');
     filteredData = [...allData];
-    
-    // Debug: afficher les colonnes disponibles
-    if (allData.length > 0) {
-        console.log('Colonnes disponibles:', Object.keys(allData[0]));
-    }
+
+    const coordData = await loadCSV('../data/coordonnees.csv');
+
+    coordData.forEach(row => {
+        // Utiliser les noms de colonnes avec majuscules
+        if (row.Lieu && row.Latitude && row.Longitude) {
+            const lat = parseFloat(row.Latitude);
+            const lon = parseFloat(row.Longitude);
+            
+            // Vérifier que les coordonnées sont valides
+            if (!isNaN(lat) && !isNaN(lon)) {
+                const key = row.Lieu.trim().toLowerCase();
+                coordIndex[key] = {
+                    lat: lat,
+                    lon: lon
+                };
+                console.log(`✓ Coordonnées chargées: "${row.Lieu}" -> ${lat}, ${lon}`);
+            }
+        }
+    });
+
+    console.log('Index des coordonnées chargé:', Object.keys(coordIndex).length, 'villes');
 }
 
 // =====================
@@ -152,41 +173,60 @@ function populateFilters() {
     const resultSelect = document.getElementById('filter-result');
 
     if (!heresySelect || !yearSelect || !resultSelect) return;
+    if (!allData.length) return; // Protection si pas de données
 
-    // CORRECTION: Vérifier les noms exacts des colonnes dans vos données
-    const heresyColumn = Object.keys(allData[0] || {}).find(k => 
+    // Détection automatique des colonnes
+    const heresyColumn = Object.keys(allData[0]).find(k => 
         k.toLowerCase().includes('heres') || k.toLowerCase().includes('heresy')
     ) || 'heresie';
     
-    const yearColumn = Object.keys(allData[0] || {}).find(k => 
+    const yearColumn = Object.keys(allData[0]).find(k => 
         k.toLowerCase().includes('annee') || k.toLowerCase().includes('year')
     ) || 'annee';
     
-    const resultColumn = Object.keys(allData[0] || {}).find(k => 
+    const resultColumn = Object.keys(allData[0]).find(k => 
         k.toLowerCase().includes('resultat') || k.toLowerCase().includes('result')
     ) || 'resultat_dispense';
 
-    // Stocker les noms de colonnes pour utilisation ultérieure
+    // Stocker les noms de colonnes
     window.filterColumns = { heresyColumn, yearColumn, resultColumn };
 
-    [...new Set(allData.map(d => d[heresyColumn]).filter(Boolean))]
-        .sort()
-        .forEach(v => heresySelect.append(new Option(v, v)));
+    // Peupler les sélecteurs
+    const heresies = [...new Set(allData.map(d => d[heresyColumn]).filter(Boolean))].sort();
+    heresies.forEach(v => {
+        const option = document.createElement('option');
+        option.value = v;
+        option.textContent = v;
+        heresySelect.appendChild(option);
+    });
 
-    [...new Set(allData.map(d => d[yearColumn]).filter(Boolean))]
-        .sort()
-        .forEach(v => yearSelect.append(new Option(v, v)));
+    const years = [...new Set(allData.map(d => d[yearColumn]).filter(Boolean))].sort();
+    years.forEach(v => {
+        const option = document.createElement('option');
+        option.value = v;
+        option.textContent = v;
+        yearSelect.appendChild(option);
+    });
 
-    [...new Set(allData.map(d => d[resultColumn]).filter(Boolean))]
-        .sort()
-        .forEach(v => resultSelect.append(new Option(v, v)));
+    const results = [...new Set(allData.map(d => d[resultColumn]).filter(Boolean))].sort();
+    results.forEach(v => {
+        const option = document.createElement('option');
+        option.value = v;
+        option.textContent = v;
+        resultSelect.appendChild(option);
+    });
 }
 
 function filterData() {
-    const search = document.getElementById('search-input').value.toLowerCase();
-    const heresy = document.getElementById('filter-heresy').value;
-    const year = document.getElementById('filter-year').value;
-    const result = document.getElementById('filter-result').value;
+    const searchInput = document.getElementById('search-input');
+    const filterHeresy = document.getElementById('filter-heresy');
+    const filterYear = document.getElementById('filter-year');
+    const filterResult = document.getElementById('filter-result');
+
+    const search = searchInput ? searchInput.value.toLowerCase() : '';
+    const heresy = filterHeresy ? filterHeresy.value : '';
+    const year = filterYear ? filterYear.value : '';
+    const result = filterResult ? filterResult.value : '';
 
     const { heresyColumn, yearColumn, resultColumn } = window.filterColumns || {
         heresyColumn: 'heresie',
@@ -217,6 +257,11 @@ function renderTable() {
     const headerRow = document.getElementById('table-header');
     const tbody = document.getElementById('table-body');
 
+    if (!headerRow || !tbody) {
+        console.error('Éléments table-header ou table-body introuvables');
+        return;
+    }
+
     if (!allData.length) {
         tbody.innerHTML = '<tr><td colspan="100">Aucune donnée disponible</td></tr>';
         return;
@@ -226,8 +271,8 @@ function renderTable() {
 
     headerRow.innerHTML = headers.map(h =>
         (h === 'source' || h === 'cause_de_demande')
-            ? `<th class="wide-col">${h}</th>`
-            : `<th>${h}</th>`
+            ? `<th class="wide-col">${escapeHtml(h)}</th>`
+            : `<th>${escapeHtml(h)}</th>`
     ).join('');
 
     const start = (currentPage - 1) * rowsPerPage;
@@ -243,7 +288,7 @@ function renderTable() {
         <tr class="clickable-row" data-index="${start + i}">
             ${headers.map(h => {
                 const wide = (h === 'source' || h === 'cause_de_demande') ? 'class="wide-col"' : '';
-                return `<td ${wide}>${row[h] || ''}</td>`;
+                return `<td ${wide}>${escapeHtml(row[h] || '')}</td>`;
             }).join('')}
         </tr>
     `).join('');
@@ -251,15 +296,27 @@ function renderTable() {
     updatePagination();
 }
 
+// Fonction utilitaire pour échapper le HTML
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
 // =====================
 // Pagination
 // =====================
 function updatePagination() {
+    const pageInfo = document.getElementById('page-info');
+    const prevBtn = document.getElementById('prev-page');
+    const nextBtn = document.getElementById('next-page');
+
+    if (!pageInfo || !prevBtn || !nextBtn) return;
+
     const totalPages = Math.ceil(filteredData.length / rowsPerPage) || 1;
-    document.getElementById('page-info').textContent =
-        `Page ${currentPage} sur ${totalPages}`;
-    document.getElementById('prev-page').disabled = currentPage === 1;
-    document.getElementById('next-page').disabled = currentPage >= totalPages;
+    pageInfo.textContent = `Page ${currentPage} sur ${totalPages}`;
+    prevBtn.disabled = currentPage === 1;
+    nextBtn.disabled = currentPage >= totalPages;
 }
 
 // =====================
@@ -269,40 +326,48 @@ document.addEventListener('click', e => {
     const row = e.target.closest('.clickable-row');
     if (!row) return;
 
-    const data = filteredData[row.dataset.index];
+    const index = parseInt(row.dataset.index);
+    const data = filteredData[index];
+    
     if (data) {
         openCaseModal(data);
     }
 });
 
 function openCaseModal(row) {
-    // Supprimer toute modale existante
     const existingModal = document.querySelector('.modal-overlay');
     if (existingModal) {
+        // Nettoyer la carte existante avant de supprimer
+        if (modalMap) {
+            modalMap.remove();
+            modalMap = null;
+            modalMarkers = [];
+        }
         existingModal.remove();
     }
 
     const modal = document.createElement('div');
     modal.className = 'modal-overlay';
 
-    // Générer un ID unique pour la carte
     const mapId = 'modal-map-' + Date.now();
 
     const infoHTML = Object.entries(row)
-        .filter(([k, v]) => v)
+        .filter(([k, v]) => v && v.toString().trim() !== '')
         .map(([k, v]) => `
             <div class="info-row">
-                <div class="info-key">${k}</div>
-                <div class="info-value">${v}</div>
+                <div class="info-key">${escapeHtml(k)}</div>
+                <div class="info-value">${escapeHtml(String(v))}</div>
             </div>
         `).join('');
 
     modal.innerHTML = `
         <div class="modal-box">
-            <button class="modal-close">✕</button>
+            <button class="modal-close" aria-label="Fermer">✕</button>
             <div class="modal-content">
                 <div class="modal-info">${infoHTML}</div>
-                <div class="modal-map"><div id="${mapId}"></div></div>
+                <div class="modal-map">
+                    <div id="${mapId}" style="height: 100%; width: 100%;"></div>
+                </div>
             </div>
         </div>
     `;
@@ -310,80 +375,139 @@ function openCaseModal(row) {
     document.body.appendChild(modal);
 
     const closeModal = () => {
-        // Nettoyer la carte Leaflet avant de supprimer le modal
-        if (window.currentModalMap) {
-            window.currentModalMap.remove();
-            window.currentModalMap = null;
+        if (modalMap) {
+            modalMap.remove();
+            modalMap = null;
+            modalMarkers = [];
         }
         modal.remove();
     };
 
     modal.querySelector('.modal-close').onclick = closeModal;
-    modal.onclick = e => { if (e.target === modal) closeModal(); };
+    
+    // Fermer en cliquant sur l'overlay
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            closeModal();
+        }
+    });
 
-    // Simple timeout comme dans l'exemple qui fonctionne
-    setTimeout(() => initModalMap(row, mapId), 100);
+    // Fermer avec la touche Échap
+    const handleEscape = (e) => {
+        if (e.key === 'Escape') {
+            closeModal();
+            document.removeEventListener('keydown', handleEscape);
+        }
+    };
+    document.addEventListener('keydown', handleEscape);
+
+    setTimeout(() => initModalMap(row, mapId), 150);
 }
 
-// =====================
-// Carte Leaflet du modal
-// =====================
-function initModalMap(row, mapId) {
-    const mapElement = document.getElementById(mapId);
-    if (!mapElement) {
-        console.error('Element', mapId, 'introuvable');
-        return;
+async function resolvePlace(place) {
+    const key = place.toLowerCase().trim();
+
+    // 1️⃣ CSV local
+    if (coordIndex[key]) {
+        return {
+            lat: coordIndex[key].lat,
+            lon: coordIndex[key].lon,
+            label: place
+        };
     }
 
-    // Vérifier si Leaflet est chargé
+    // 2️⃣ Fallback Nominatim avec gestion d'erreur
+    try {
+        const res = await fetch(
+            `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(place)}`,
+            {
+                headers: {
+                    'User-Agent': 'HistoricalDataApp/1.0' // Nominatim requiert un User-Agent
+                }
+            }
+        ).then(r => r.json());
+
+        if (!res || !res.length) return null;
+
+        return {
+            lat: parseFloat(res[0].lat),
+            lon: parseFloat(res[0].lon),
+            label: res[0].display_name
+        };
+    } catch (error) {
+        console.error(`Erreur lors de la résolution de "${place}":`, error);
+        return null;
+    }
+}
+
+async function initModalMap(row, mapId) {
+    // Vérifier que Leaflet est chargé
     if (typeof L === 'undefined') {
         console.error('Leaflet n\'est pas chargé');
         return;
     }
 
-    // Supprimer l'ancienne carte si elle existe
-    if (window.currentModalMap) {
-        window.currentModalMap.remove();
-        window.currentModalMap = null;
-    }
-
-    // Nettoyer toute instance Leaflet précédente
-    if (mapElement._leaflet_id) {
-        delete mapElement._leaflet_id;
-    }
-
-    // Créer la carte très simplement
-    const map = L.map(mapId).setView([46.5, 2.5], 5);
-    window.currentModalMap = map;
-
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap'
-    }).addTo(map);
-
-    // Invalider la taille après création
-    map.invalidateSize();
-
-    // Trouver le lieu à géolocaliser
-    const place = row.diocese_origine_fr || row.diocese_origine || row.pays;
-    if (!place) {
-        console.log('Aucun lieu à géolocaliser');
+    const mapElement = document.getElementById(mapId);
+    if (!mapElement) {
+        console.error(`Élément de carte ${mapId} introuvable`);
         return;
     }
 
-    // Géolocalisation avec Nominatim
-    fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(place)}`)
-        .then(r => r.json())
-        .then(res => {
-            if (!res || !res.length) {
-                console.log('Lieu non trouvé:', place);
-                return;
-            }
-            const { lat, lon } = res[0];
-            map.setView([lat, lon], 7);
-            L.marker([lat, lon])
-                .addTo(map)
-                .bindPopup(`<strong>${place}</strong>`)
-                .openPopup();
-        })
-        .catch(err => console.error('Erreur géolocalisation:', err));
+    modalMap = L.map(mapId).setView([46.5, 2.5], 5);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors',
+        maxZoom: 19
+    }).addTo(modalMap);
+
+    const placeRaw =
+        row.diocese_origine_fr ||
+        row.diocese_origine ||
+        row.pays;
+
+    if (!placeRaw || placeRaw.trim() === '') {
+        console.log('Aucun lieu à afficher');
+        return;
+    }
+
+    const places = placeRaw
+        .split(',')
+        .map(p => p.trim())
+        .filter(Boolean);
+
+    const bounds = [];
+
+    for (const place of places) {
+        const result = await resolvePlace(place);
+        if (!result) {
+            console.log(`Impossible de résoudre: ${place}`);
+            continue;
+        }
+
+        const coords = [result.lat, result.lon];
+
+        const marker = L.marker(coords)
+            .addTo(modalMap)
+            .bindPopup(escapeHtml(result.label));
+
+        modalMarkers.push(marker);
+        bounds.push(coords);
+    }
+
+    if (bounds.length > 0) {
+        if (bounds.length === 1) {
+            // Un seul marqueur - centrer avec un zoom approprié
+            modalMap.setView(bounds[0], 10);
+        } else {
+            // Plusieurs marqueurs - ajuster les limites
+            modalMap.fitBounds(bounds, { padding: [40, 40] });
+        }
+    }
+
+    // Forcer le redimensionnement de la carte
+    setTimeout(() => {
+        if (modalMap) {
+            modalMap.invalidateSize();
+        }
+    }, 200);
 }
