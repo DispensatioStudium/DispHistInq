@@ -5,6 +5,58 @@ let map = null;
 let coordinates = {};
 let markers = [];
 
+const headerLabels = {
+    'cas-id': 'ID',
+    'source': 'Source',
+    'folio': 'Folio',
+    'nom_requerant.e': 'Requérant·e',
+    'identite_eccl': 'Identité ecclésiastique',
+    'genre': 'Genre',
+    'ordre_religieux': 'Ordre religieux',
+    'diocese_origine_fr': "Diocèse d'origine",
+    'pays': 'Pays',
+    'annee': 'Année',
+    'durée_cause_mois': 'Durée (mois)',
+    'type_de_dispense_harmonise': 'Type de dispense',
+    'resultat_dispense': 'Résultat',
+    'cause_de_demande': 'Cause de la demande',
+    'justification_demande_SO': 'Justification (Saint-Office)',
+    'Liens_autres_congregations': 'Liens autres congrégations',
+    'heresie': 'Hérésie',
+    'nombre_acteurs_ext': 'Nb acteurs',
+    'nom_acteur_1_statut': 'Acteur 1 – Statut',
+    'nom_acteur_2_statut': 'Acteur 2 – Statut',
+    'nom_acteur_3_statut': 'Acteur 3 – Statut',
+    'nom_acteur_4_statut': 'Acteur 4 – Statut',
+    'nom_acteur_5_statut': 'Acteur 5 – Statut',
+    'nom_acteur_6_statut': 'Acteur 6 – Statut',
+    'nom_acteur_7_statut': 'Acteur 7 – Statut',
+    'nom_acteur_8_statut': 'Acteur 8 – Statut',
+    'nom_acteur_9_statut': 'Acteur 9 – Statut',
+    'nom_acteur_10_statut': 'Acteur 10 – Statut',
+    'nom_acteur_11_statut': 'Acteur 11 – Statut',
+    'documents_annexes': 'Documents annexes',
+    'Nature_doc_1': 'Nature doc. 1',
+    'Nature_doc_2': 'Nature doc. 2',
+    'Nature_doc_3': 'Nature doc. 3',
+    'Nature_doc_4': 'Nature doc. 4',
+    'Nature_doc_5': 'Nature doc. 5',
+    'Nature_doc_6': 'Nature doc. 6',
+    'Nature_doc_7': 'Nature doc. 7',
+    'demandes_multiples': 'Demandes multiples'
+};
+
+function renderFullDetails(row) {
+    return Object.entries(headerLabels)
+        .filter(([key]) => row[key] && row[key].toString().trim() !== '')
+        .map(([key, label]) => `
+            <div class="detail-item">
+                <span class="detail-label">${escapeHtml(label)}</span>
+                <span class="detail-value">${escapeHtml(row[key])}</span>
+            </div>
+        `).join('');
+}
+
 document.addEventListener("DOMContentLoaded", async () => {
     await initData();
     initMap();
@@ -244,12 +296,23 @@ function updateMap() {
                 fillOpacity: 0.7
             }).addTo(map);
 
+            marker.bindTooltip(
+                `<strong>${escapeHtml(diocese)}</strong><br>${count} cas`,
+                {
+                    direction: 'top',
+                    offset: [0, -5],
+                    opacity: 0.95,
+                    sticky: true
+                }
+            );
+
             marker.on('click', () => {
                 const casesForDiocese = filteredData.filter(
                     row => row.diocese_origine_fr === diocese
                 );
                 openCasesModal(diocese, casesForDiocese);
             });
+
             markers.push(marker);
         }
     });
@@ -281,20 +344,28 @@ function openCasesModal(diocese, cases) {
     const casesHTML = cases.map((row, index) => {
         return `
             <div class="case-block">
-                <h3 class="case-title">
+                <h3 class="case-title case-name">
                     ${escapeHtml(row['nom_requerant.e'] || 'Sans nom')}
-                    ${row['annee'] ? `(${row['annee']})` : ''}
+                    ${row['annee'] ? ` (${row['annee']})` : ''}
                 </h3>
 
                 <div class="case-grid">
-                    ${renderField(row, 'folio', 'Folio')}
+                    ${renderField(row, 'identite_eccl', 'Identité ecclésiastique')}
                     ${renderField(row, 'genre', 'Genre')}
                     ${renderField(row, 'ordre_religieux', 'Ordre religieux')}
                     ${renderField(row, 'heresie', 'Hérésie', true)}
-                    ${renderField(row, 'type_de_dispense_harmonise', 'Type de dispense', true)}
+                    ${renderField(row, 'type_de_dispense_harmonise', 'Type de dispense')}
                     ${renderField(row, 'resultat_dispense', 'Résultat')}
-                    ${renderField(row, 'cause_de_demande', 'Cause', true)}
-                    ${renderField(row, 'source', 'Source', true)}
+                    ${renderField(row, 'cause_de_demande', 'Cause de la demande')}
+
+                </div>
+
+                <button class="case-toggle">Voir les détails du cas</button>
+
+                <div class="case-details-full" hidden>
+                    <div class="details-grid">
+                        ${renderFullDetails(row)}
+                    </div>
                 </div>
             </div>
         `;
@@ -337,6 +408,7 @@ function renderField(row, key, label, isLong = false) {
     `;
 }
 
+
 function escapeHtml(str) {
     return String(str)
         .replace(/&/g, '&amp;')
@@ -345,3 +417,16 @@ function escapeHtml(str) {
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#039;');
 }
+
+document.addEventListener('click', e => {
+    const btn = e.target.closest('.case-toggle');
+    if (!btn) return;
+
+    const details = btn.nextElementSibling;
+    const isOpen = !details.hasAttribute('hidden');
+
+    details.toggleAttribute('hidden');
+    btn.textContent = isOpen
+        ? 'Voir les détails du cas'
+        : 'Masquer les détails';
+});
