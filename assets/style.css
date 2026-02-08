@@ -811,3 +811,8 @@ tbody tr:nth-child(even):hover {
     padding-top: 1rem;
     border-top: 1px dashed  #ffffff;
 }
+
+.chart-container {
+    max-width: 900px;
+    margin: 2rem auto;
+}

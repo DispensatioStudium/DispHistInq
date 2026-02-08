@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DispHistInq – Analyse les données</title>
+
+  <!-- CSS principal -->
+  <link rel="stylesheet" href="../assets/style.css">
+
+  <!-- Leaflet -->
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  />
+  <script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    defer
+  ></script>
+
+</head>
+<body>
+  <div class="container">
+
+    <header>
+      <h1>DispHistInq</h1>
+    </header>
+
+    <nav class="tabs">
+      <a class="tab-button" href="../index.html">Accueil</a>
+      <a class="tab-button" href="donnees.html">Explorer les données</a>
+      <a class="tab-button" href="carte.html">Carte géographique</a>
+      <a class="tab-button active" href="analyse.html">Analyse</a>
+    </nav>
+
+    <main>
+    <h2>Évolution chronologique des cas</h2>
+    <canvas id="chartChrono" width="800" height="400"></canvas>
+    </main>
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Script analyse -->
+    <script src="../assets/script-analyse.js"></script>
+
+
+</body>
+</html>
