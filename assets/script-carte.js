@@ -244,7 +244,12 @@ function updateMap() {
                 fillOpacity: 0.7
             }).addTo(map);
 
-            marker.bindPopup(`<b>${diocese}</b><br>${count} cas`);
+            marker.on('click', () => {
+                const casesForDiocese = filteredData.filter(
+                    row => row.diocese_origine_fr === diocese
+                );
+                openCasesModal(diocese, casesForDiocese);
+            });
             markers.push(marker);
         }
     });
@@ -264,4 +269,79 @@ function updateMapStats() {
         );
         diocesesCountEl.textContent = uniqueDioceses.size;
     }
+}
+
+function openCasesModal(diocese, cases) {
+    const existingModal = document.querySelector('.modal-overlay');
+    if (existingModal) existingModal.remove();
+
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+
+    const casesHTML = cases.map((row, index) => {
+        return `
+            <div class="case-block">
+                <h3 class="case-title">
+                    ${escapeHtml(row['nom_requerant.e'] || 'Sans nom')}
+                    ${row['annee'] ? `(${row['annee']})` : ''}
+                </h3>
+
+                <div class="case-grid">
+                    ${renderField(row, 'folio', 'Folio')}
+                    ${renderField(row, 'genre', 'Genre')}
+                    ${renderField(row, 'ordre_religieux', 'Ordre religieux')}
+                    ${renderField(row, 'heresie', 'Hérésie', true)}
+                    ${renderField(row, 'type_de_dispense_harmonise', 'Type de dispense', true)}
+                    ${renderField(row, 'resultat_dispense', 'Résultat')}
+                    ${renderField(row, 'cause_de_demande', 'Cause', true)}
+                    ${renderField(row, 'source', 'Source', true)}
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    modal.innerHTML = `
+        <div class="modal-overlay-bg"></div>
+        <div class="modal-container modal-large">
+            <div class="modal-header">
+                <h2 class="modal-title">
+                    ${escapeHtml(diocese)} — ${cases.length} cas
+                </h2>
+                <button class="modal-close">✕</button>
+            </div>
+
+            <div class="modal-body modal-scroll">
+                ${casesHTML || '<p>Aucun cas disponible.</p>'}
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    const closeModal = () => modal.remove();
+    modal.querySelector('.modal-close').onclick = closeModal;
+    modal.querySelector('.modal-overlay-bg').onclick = closeModal;
+
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') closeModal();
+    }, { once: true });
+}
+
+function renderField(row, key, label, isLong = false) {
+    if (!row[key] || row[key].trim() === '') return '';
+    return `
+        <div class="detail-item ${isLong ? 'detail-item-long' : ''}">
+            <span class="detail-label">${escapeHtml(label)}</span>
+            <span class="detail-value">${escapeHtml(row[key])}</span>
+        </div>
+    `;
+}
+
+function escapeHtml(str) {
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
 }
