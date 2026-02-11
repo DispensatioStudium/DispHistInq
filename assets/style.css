@@ -333,7 +333,7 @@ table {
 }
 
 thead {
-    background: linear-gradient(135deg, var(--color-red-dark) 0%, #991b1b 100%);
+    background: linear-gradient(135deg, var(--color-red-dark) 0%, #743e3e 100%);
     color: white;
     position: sticky;
     top: 0;
