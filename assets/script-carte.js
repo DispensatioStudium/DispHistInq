@@ -289,8 +289,8 @@ function updateMap() {
         if (coord && !isNaN(coord.lat) && !isNaN(coord.lng)) {
             const marker = L.circleMarker([coord.lat, coord.lng], {
                 radius: Math.min(5 + Math.sqrt(count) * 2, 20),
-                fillColor: '#6b2737',
-                color: '#c9a961',
+                fillColor: '#0284c7',
+                color: '#06b6d4',
                 weight: 2,
                 opacity: 1,
                 fillOpacity: 0.7
