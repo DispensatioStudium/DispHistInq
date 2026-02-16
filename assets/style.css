@@ -952,3 +952,114 @@ tbody tr:nth-child(even):hover {
 .title-overlay.fade-out {
     opacity: 0;
 }
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.password-modal-content {
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-bg-tertiary);
+  border-radius: 16px;
+  box-shadow: 0 20px 60px var(--color-shadow), 0 0 40px var(--color-glow);
+  max-width: 420px;
+  width: 90%;
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.password-modal-header {
+  padding: 24px 28px 16px;
+  border-bottom: 1px solid var(--color-bg-tertiary);
+}
+
+.password-modal-header h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  letter-spacing: -0.02em;
+}
+
+.password-modal-body {
+  padding: 24px 28px;
+}
+
+.password-input {
+  width: 100%;
+  padding: 14px 16px;
+  background: var(--color-bg-primary);
+  border: 1.5px solid var(--color-bg-tertiary);
+  border-radius: 10px;
+  color: var(--color-text-primary);
+  font-family: var(--font-mono);
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  outline: none;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+}
+
+.password-input::placeholder {
+  color: var(--color-text-secondary);
+  font-family: var(--font-body);
+  letter-spacing: normal;
+  font-weight: 400;
+}
+
+.password-input:focus {
+  border-color: var(--color-blue-primary);
+  box-shadow: 0 0 0 3px var(--color-glow);
+}
+
+.error-message {
+  margin: 12px 0 0;
+  color: #ef4444;
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 500;
+  min-height: 18px;
+}
+
+.password-modal-footer {
+  padding: 16px 28px 24px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.btn-submit {
+  padding: 12px 32px;
+  background: var(--color-blue-primary);
+  border: none;
+  border-radius: 10px;
+  color: white;
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+}
+
+.btn-submit:hover {
+  background: var(--color-blue-bright);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(59, 130, 246, 0.3);
+}
+
+.btn-submit:active {
+  transform: translateY(0);
+}
