@@ -1,89 +1,154 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>DispHistInq – Explorer les données</title>
 
-  <!-- CSS principal -->
-  <link rel="stylesheet" href="../assets/style.css">
-
-  <!-- Leaflet -->
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-  />
-  <script
-    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-    defer
-  ></script>
-  
-  <script src="../assets/script-aut.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=IM+Fell+English+SC&family=Lato:wght@300;400&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="../assets/style.css" />
+  <script src="../assets/aut.js"></script>
 
 </head>
 <body>
-  <div class="container">
 
-    <header>
-      <h1 id="site-title" style="cursor: pointer;">DispHistInq</h1>
-      <p class="subtitle">Les données des dispenses de l'Inquisition</p>
-    </header>
+<!-- ── PANNEAU GAUCHE ──────────────────────────────────────── -->
+<div id="left-panel">
 
-    <nav class="tabs">
-      <a class="tab-button" href="../index.html">Accueil</a>
-      <a class="tab-button active" href="donnees.html">Explorer les données</a>
-      <a class="tab-button" href="carte.html">Carte géographique</a>
-      <a class="tab-button" href="analyse.html">Analyse</a>
-    </nav>
-
-    <div class="search-controls">
-      <input
-        type="text"
-        id="search-input"
-        placeholder="Rechercher dans toutes les colonnes…"
-      >
-
-      <select id="filter-heresy">
-        <option value="">Rapport avec l’hérésie</option>
-      </select>
-
-      <select id="filter-year">
-        <option value="">Toutes les années</option>
-      </select>
-
-      <select id="filter-result">
-        <option value="">Tous les résultats</option>
-      </select>
-    </div>
-
-    <div class="table-container">
-      <div class="table-wrapper">
-        <table id="data-table">
-          <thead>
-            <tr id="table-header"></tr>
-          </thead>
-          <tbody id="table-body">
-            <tr>
-              <td colspan="100" class="loading">Chargement des données…</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <div class="pagination">
-      <button id="prev-page">Précédent</button>
-      <span class="current-page" id="page-info">Page 1</span>
-      <button id="next-page">Suivant</button>
-    </div>
-
+  <div id="left-header">
+    <h1 onclick="location.href='../index.html'">DispHistInq</h1>
+    <p>Les dispenses historiques de l'Inquisition<br/>xvii<sup>e</sup>–xviii<sup>e</sup> siècle</p>
   </div>
 
-  <!-- Leaflet JS (AVANT ton script) -->
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <span class="ornament">✦ ✦ ✦</span>
 
-  <!-- Script tableau -->
-  <script src="../assets/script-tableau.js"></script>
-  <script src="../assets/script-titre.js"></script>
+  <nav id="left-nav">
+    <div class="nav-section-label">Navigation</div>
+
+    <a class="nav-link" href="../index.html">
+      <span class="nav-icon">⌂</span>Accueil
+    </a>
+    <a class="nav-link" href="carte.html">
+      <span class="nav-icon">◎</span>Carte temporelle
+    </a>
+    <a class="nav-link" href="analyse.html">
+        <span class="nav-icon">◈</span>
+        Analyse
+    </a>
+  </nav>
+
+  <div id="left-footer">
+    <p>Projet d'histoire numérique<br>sur les dispenses accordées par<br>le Saint-Office, 1600–1750.</p>
+  </div>
+
+</div>
+
+<!-- ── ZONE PRINCIPALE ─────────────────────────────────────── -->
+<div id="main-content">
+
+  <!-- Barre de titre -->
+  <div id="top-bar">
+    <span>Explorer les données · Tableau complet</span>
+    <div id="data-badge">
+      <div class="badge-dot"></div>
+      <span id="badge-label">Chargement…</span>
+    </div>
+  </div>
+
+  <!-- Barre de recherche et filtres -->
+  <div id="filter-bar">
+    <input
+      type="text"
+      id="search-input"
+      placeholder="Rechercher dans toutes les colonnes…"
+    />
+    <select id="filter-heresy" class="filter-select">
+      <option value="">Rapport avec l'hérésie</option>
+    </select>
+    <select id="filter-year" class="filter-select">
+      <option value="">Toutes les années</option>
+    </select>
+    <select id="filter-result" class="filter-select">
+      <option value="">Tous les résultats</option>
+    </select>
+    <span id="result-count"></span>
+  </div>
+
+  <!-- Tableau -->
+  <div id="table-area">
+    <div class="table-wrapper">
+      <table id="data-table">
+        <thead><tr id="table-header"></tr></thead>
+        <tbody id="table-body">
+          <tr><td class="loading-cell" colspan="100">Chargement des données…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Pagination -->
+  <div id="pagination-bar">
+    <button class="pag-btn" id="prev-page">← Précédent</button>
+    <span id="page-info">Page 1 sur 1</span>
+    <button class="pag-btn" id="next-page">Suivant →</button>
+  </div>
+
+</div>
+
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<!-- Script tableau (adapté pour raccorder les IDs ci-dessus) -->
+<script src="../assets/tableau.js"></script>
+
+<script>
+  /* ── Raccordement du badge de statut ─────────────────── */
+  (function patchBadge() {
+    const _orig = window.renderTable;
+    if (!_orig) return;
+    const badge = document.getElementById('badge-label');
+    const count = document.getElementById('result-count');
+    // Remplacer renderTable pour mettre à jour le badge
+    window.renderTable = function() {
+      _orig.apply(this, arguments);
+      if (badge && window.allData) {
+        badge.textContent = window.allData.length + ' cas chargés';
+      }
+      if (count && window.filteredData) {
+        count.innerHTML =
+          '<strong>' + window.filteredData.length + '</strong> résultat' +
+          (window.filteredData.length > 1 ? 's' : '');
+      }
+    };
+  })();
+
+  /* ── Remplacer les IDs de boutons de pagination ──────── */
+  // tableau.js utilise #prev-page et #next-page → déjà identiques ici.
+  // tableau.js utilise #page-info → déjà identique ici.
+
+  /* ── Patch updatePagination pour badge résultat ─────── */
+  document.addEventListener('DOMContentLoaded', () => {
+    const count = document.getElementById('result-count');
+
+    const observer = new MutationObserver(() => {
+      if (typeof filteredData !== 'undefined' && count) {
+        count.innerHTML =
+          '<strong>' + filteredData.length + '</strong> résultat' +
+          (filteredData.length > 1 ? 's' : '');
+      }
+      if (typeof allData !== 'undefined') {
+        const badge = document.getElementById('badge-label');
+        if (badge) badge.textContent = allData.length + ' cas chargés';
+      }
+    });
+
+    const tbody = document.getElementById('table-body');
+    if (tbody) observer.observe(tbody, { childList: true });
+  });
+</script>
+
 </body>
 </html>

@@ -1,58 +1,132 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DispHistInq - Accueil</title>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <link rel="stylesheet" href="assets/style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DispHistInq — Accueil</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=IM+Fell+English+SC&family=Lato:wght@300;400&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/style.css" />
+
 </head>
 <body>
-  <div class="container">
-  <header>
-    <h1 id="site-title" style="cursor: pointer;">DispHistInq</h1>
-    <p class="subtitle">Les dispenses historiques de l'Inquisition</p>
-  </header>
 
-    <nav class="tabs">
-      <a class="tab-button active" href="index.html">Accueil</a>
-      <a class="tab-button" href="pages/donnees.html">Explorer les données</a>
-      <a class="tab-button" href="pages/carte.html">Carte géographique</a>
-      <a class="tab-button" href="pages/analyse.html">Analyse</a>
+  <!-- ── PANNEAU GAUCHE ────────────────────────────────────────── -->
+  <div id="left-panel">
+
+    <div id="left-header">
+      <h1 onclick="window.location='index.html'">DispHistInq</h1>
+      <p>Les dispenses historiques de l'Inquisition<br/>xvii<sup>e</sup>–xviii<sup>e</sup> siècle</p>
+    </div>
+
+    <span class="ornament">· · ✦ · ·</span>
+
+    <nav id="left-nav">
+      <div class="nav-section-label">Navigation</div>
+
+      <a class="nav-link active" href="index.html">
+        <span class="nav-icon">⌂</span>
+        Accueil
+      </a>
+      <a class="nav-link" href="pages/donnees.html">
+        <span class="nav-icon">☰</span>
+        Explorer les données
+      </a>
+      <a class="nav-link" href="pages/carte.html">
+        <span class="nav-icon">◎</span>
+        Carte géographique
+      </a>
+      <a class="nav-link" href="pages/analyse.html">
+        <span class="nav-icon">◈</span>
+        Analyse
+      </a>
     </nav>
 
-    <div class="welcome-section">
-      <h2>Bienvenue sur DispHistInq</h2>
-      <p>
-        Ce site permet d'explorer et de visualiser les données relatives aux dispenses historiques 
-        accordées ou refusées dans le cadre des procédures inquisitoriales. Le projet DispHistInq 
-        rassemble des informations précieuses sur les requérants, les types de dispenses demandées, 
-        les résultats obtenus et les contextes géographiques de ces demandes.
-      </p>
-      <p>
-        À travers les onglets ci-dessus, vous pouvez explorer l'ensemble des cas recensés dans notre 
-        base de données, filtrer et rechercher selon différents critères, et visualiser la répartition 
-        géographique des diocèses d'origine sur une carte interactive.
-      </p>
+    <div id="left-footer">
+      <p>Projet de recherche historique.<br/>Données issues des archives de l'Inquisition.</p>
     </div>
 
-    <div class="stats" id="stats">
-      <div class="stat-card">
-        <div class="stat-number" id="total-cases">-</div>
-        <div class="stat-label">Cas total</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-number" id="total-dioceses">-</div>
-        <div class="stat-label">Diocèses</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-number" id="total-years">-</div>
-        <div class="stat-label">Période</div>
-      </div>
-    </div>
   </div>
 
-  <script src="assets/script-principal.js"></script>
-  <script src="assets/script-titre.js"></script>
+  <!-- ── ZONE PRINCIPALE ──────────────────────────────────────── -->
+  <div id="main-content">
+
+    <div id="top-bar">
+      <span>Accueil · DispHistInq</span>
+      <div id="data-badge">
+        <span class="badge-dot"></span>
+        <span id="data-status">Base chargée</span>
+      </div>
+    </div>
+
+    <div id="scroll-area">
+
+      <div class="page-eyebrow">Projet de recherche · Archives inquisitoriales</div>
+      <h2 class="page-title">Bienvenue sur<br/>DispHistInq</h2>
+      <hr class="page-rule" />
+
+      <p class="page-intro">
+        Ce site permet d'explorer et de visualiser les données relatives aux dispenses 
+        historiques accordées ou refusées dans le cadre des procédures inquisitoriales. 
+        Le projet DispHistInq rassemble des informations précieuses sur les requérants, 
+        les types de dispenses demandées, les résultats obtenus et les contextes 
+        géographiques de ces demandes.
+      </p>
+      <p class="page-intro">
+        À travers les modules ci-dessous, vous pouvez explorer l'ensemble des cas recensés, 
+        filtrer selon différents critères et visualiser la répartition géographique 
+        des diocèses d'origine sur une carte interactive.
+      </p>
+
+      <!-- Stats -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-number" id="total-cases">—</div>
+          <div class="stat-label">Cas recensés</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number" id="total-dioceses">—</div>
+          <div class="stat-label">Diocèses</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number" id="total-years">—</div>
+          <div class="stat-label">Période</div>
+        </div>
+      </div>
+
+      <!-- Modules -->
+      <div class="section-title">Modules disponibles</div>
+      <div class="modules-grid">
+
+        <a class="module-card" href="pages/donnees.html">
+          <span class="module-icon">☰</span>
+          <div class="module-name">Explorer les données</div>
+          <div class="module-desc">Parcourez l'intégralité des cas, filtrez par diocèse, type de dispense ou résultat.</div>
+          <span class="module-arrow">Ouvrir →</span>
+        </a>
+
+        <a class="module-card" href="pages/carte.html">
+          <span class="module-icon">◎</span>
+          <div class="module-name">Carte géographique</div>
+          <div class="module-desc">Visualisez la distribution temporelle et géographique des cas sur une carte interactive.</div>
+          <span class="module-arrow">Ouvrir →</span>
+        </a>
+
+        <a class="module-card" href="pages/analyse.html">
+          <span class="module-icon">◈</span>
+          <div class="module-name">Analyse</div>
+          <div class="module-desc">Explorez les tendances statistiques, les évolutions chronologiques et les profils types.</div>
+          <span class="module-arrow">Ouvrir →</span>
+        </a>
+
+      </div>
+
+    </div><!-- /scroll-area -->
+  </div><!-- /main-content -->
+
+  <script src="assets/principal.js"></script>
+
 </body>
 </html>

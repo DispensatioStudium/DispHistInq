@@ -1,74 +1,189 @@
 <!DOCTYPE html>
 <html lang="fr">
-
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DispHistInq - Carte géographique</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DispHistInq</title>
 
-  <!-- Leaflet -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=IM+Fell+English+SC&family=Lato:wght@300;400&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-
-  <!-- CSS du site (on remonte d'un niveau) -->
   <link rel="stylesheet" href="../assets/style.css">
-  <link rel="stylesheet" href="../assets/carte-styles.css">
-  <script src="../assets/script-aut.js"></script>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="../assets/aut.js"></script>
+
 </head>
-
 <body>
-  <div class="container">
-    <header>
-      <h1 id="site-title" style="cursor: pointer;">DispHistInq</h1>
-      <p class="subtitle">Carte des dispenses de l'Inquisition</p>
-    </header>
 
-    <nav class="tabs">
-      <a class="tab-button" href="../index.html">Accueil</a>
-      <a class="tab-button" href="donnees.html">Explorer les données</a>
-      <a class="tab-button active" href="carte.html">Carte géographique</a>
-      <a class="tab-button" href="analyse.html">Analyse</a>
-    </nav>
+<div id="loading-overlay">
+  <div class="spinner"></div>
+  <div class="load-title">Chargement de la carte…</div>
+  <div class="load-sub">DispHistInq</div>
+</div>
 
-    <!-- Filtres de recherche -->
-    <div class="search-controls">
-      <input type="text" id="search-input" placeholder="Rechercher dans toutes les colonnes…">
 
-      <select id="filter-heresy">
-        <option value="">Rapport avec l'hérésie</option>
-      </select>
+<!-- ── SIDEBAR ──────────────────────────────────────────────────────── -->
+<div id="sidebar">
 
-      <select id="filter-year">
-        <option value="">Toutes les années</option>
-      </select>
-
-      <select id="filter-result">
-        <option value="">Tous les résultats</option>
-      </select>
-    </div>
-
-    <div class="map-container">
-      <!-- Statistiques de la carte -->
-      <div class="map-stats">
-        <div class="stat-item">
-          <span class="stat-label">Cas affichés :</span>
-          <span class="stat-value" id="map-cases-count">0</span>
-        </div>
-        <div class="stat-item">
-          <span class="stat-label">Diocèses :</span>
-          <span class="stat-value" id="map-dioceses-count">0</span>
-        </div>
-      </div>
-      <div id="map"></div>
+  <div id="sidebar-header">
+    <h1><a href="../index.html">DispHistInq</a></h1>
+    <p>Carte temporelle des diocèses · xvii<sup>e</sup>–xviii<sup>e</sup> s.</p>
+    <div id="csv-status">
+      <span id="csv-dot"></span>
+      <span id="csv-label">Données en attente…</span>
     </div>
   </div>
 
-  <!-- Leaflet -->
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <!-- ── TIMELINE ────────────────────────────────────────────── -->
+  <div id="timeline-panel">
 
-  <!-- JS du site (on remonte d'un niveau) -->
-  <script src="../assets/script-carte.js"></script>
-  <script src="../assets/script-titre.js"></script>
+    <!-- Onglets de mode -->
+    <div class="mode-tabs">
+      <div class="mode-tab active" data-mode="precise">Précis</div>
+      <div class="mode-tab"       data-mode="step5">5 ans</div>
+      <div class="mode-tab"       data-mode="decade">Décennie</div>
+      <div class="mode-tab"       data-mode="range">Plage</div>
+    </div>
+
+    <!-- BLOC ANNÉE UNIQUE (précis / 5 ans / décennie) -->
+    <div id="single-year-block">
+      <div class="slider-row-label">
+        <span id="year-label">Année</span>
+        <span class="year-val" id="year-display">1750</span>
+      </div>
+      <input type="range" id="year-slider" class="tl-slider"
+             min="1600" max="1750" value="1750" step="1" />
+      <!-- Readout fenêtre 5 ans / décennie -->
+      <div id="window-readout" style="display:none">
+        <div class="win-readout-row">
+          <div class="win-year-box">
+            <span class="win-yr-lbl">Début</span>
+            <span class="win-yr-val" id="win-start-val">1750</span>
+          </div>
+          <div class="win-arrow">→</div>
+          <div class="win-year-box">
+            <span class="win-yr-lbl">Fin</span>
+            <span class="win-yr-val" id="win-end-val">1755</span>
+          </div>
+          <div class="win-dur-badge" id="win-dur-badge">5 ans</div>
+        </div>
+      </div>
+      <div class="tl-endpoints"><span>1600</span><span>1750</span></div>
+
+      <div id="timeline-controls">
+        <button id="play-btn">
+          <svg id="play-icon" viewBox="0 0 10 10"><polygon points="0,0 10,5 0,10"/></svg>
+          <span id="play-label">Animer</span>
+        </button>
+        <span style="margin-left:auto;font-size:.67rem;color:var(--ink-faint)">Vitesse</span>
+        <select id="speed-select" class="select-mini">
+          <option value="300">×1</option>
+          <option value="150">×2</option>
+          <option value="60">×4</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- BLOC PLAGE -->
+    <div id="range-block">
+      <!-- Affichage des deux années -->
+      <div class="range-readout">
+        <div class="range-year-box">
+          <span class="ry-label">Début</span>
+          <span class="ry-val" id="range-start-display">1620</span>
+        </div>
+        <div class="range-arrow">→</div>
+        <div class="range-year-box">
+          <span class="ry-label">Fin</span>
+          <span class="ry-val" id="range-end-display">1680</span>
+        </div>
+      </div>
+      <div class="range-dur" id="range-dur-label">60 ans · tous les cas</div>
+
+      <!-- Double slider -->
+      <div class="dual-slider-wrap">
+        <div class="dual-slider-track"></div>
+        <div class="dual-slider-fill" id="dual-fill"></div>
+        <input type="range" id="range-start-slider" min="1600" max="1750" value="1620" step="1" />
+        <input type="range" id="range-end-slider"   min="1600" max="1750" value="1680" step="1" />
+      </div>
+      <div class="tl-endpoints"><span>1600</span><span>1750</span></div>
+    </div>
+
+  </div>
+
+  <!-- ── FILTRE MODE COULEUR ─────────────────────────────────── -->
+  <div id="filter-panel">
+    <label>Affichage des couleurs</label>
+    <select id="display-mode" class="select-full">
+      <option value="cas">Par diocèse</option>
+      <option value="province">Par province</option>
+    </select>
+  </div>
+
+  <!-- ── ZONE PRINCIPALE ────────────────────────────────────── -->
+  <div id="main-area">
+
+    <div id="list-view">
+      <div class="area-bar">
+        <span id="count-label">Diocèses actifs — …</span>
+        <span id="total-cas-label"></span>
+      </div>
+      <div id="diocese-list"></div>
+      <div id="error-msg"></div>
+    </div>
+
+    <div id="detail-panel">
+      <button id="detail-back">
+        <svg viewBox="0 0 8 8"><polygon points="8,0 0,4 8,8"/></svg>
+        Retour à la liste
+      </button>
+      <div id="detail-header">
+        <div id="detail-diocese-name"></div>
+        <div id="detail-meta"></div>
+      </div>
+      <div id="detail-filters">
+        <span>Filtre :</span>
+        <div class="filter-pill active" data-filter="all">Tous</div>
+        <div class="filter-pill" data-filter="ok">Accordées</div>
+        <div class="filter-pill" data-filter="no">Refusées</div>
+        <div class="filter-pill" data-filter="heresie">Hérésie</div>
+      </div>
+      <div id="detail-cases"></div>
+    </div>
+
+  </div>
+  <!-- ── CAS NON LOCALISÉS ─────────────────────────────────────── -->
+  <div id="unloc-panel">
+    <div id="unloc-header" onclick="toggleUnlocPanel()">
+      <span id="unloc-title">Cas non localisés</span>
+      <span id="unloc-count">0</span>
+      <span id="unloc-chevron">▾</span>
+    </div>
+    <div id="unloc-body">
+      <div id="unloc-list"></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ── MAP ──────────────────────────────────────────────────────────── -->
+<div id="map"></div>
+
+<script src="../assets/carte.js"></script>
+
+<!-- ── POPUP MODAL CAS ──────────────────────────────────────────── -->
+<div id="case-popup-overlay" onclick="if(event.target===this)closeCasePopup()">
+  <div id="case-popup">
+    <div id="case-popup-header">
+      <div id="case-popup-title"></div>
+      <button id="case-popup-close" onclick="closeCasePopup()" aria-label="Fermer">&times;</button>
+    </div>
+    <div id="case-popup-body"></div>
+  </div>
+</div>
 
 </body>
-
 </html>

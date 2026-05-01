@@ -6,16 +6,16 @@ let coordIndex = {};
 // DICTIONNAIRE D'EN-TÊTES
 // =====================
 const headerLabels = {
-    'cas-id': 'ID',
+    'cas.id': 'ID',
     'source': 'Source',
     'folio': 'Folio',
     'nom_requerant.e': 'Requérant·e',
     'identite_eccl': 'Identité ecclésiastique',
     'genre': 'Genre',
     'ordre_religieux': 'Ordre religieux',
-    'diocese_origine': 'Diocèse d\'origine',
-    'diocese_origine_fr': 'Diocèse d\'origine (FR)',
-    'diocese_origine_lat': 'Diocèse d\'origine (Lat)',
+    'diocese_origine_2': 'Diocèse d\'origine',
+    'diocese_origine_fr_2': 'Diocèse d\'origine (FR)',
+    'diocese_origine_lat_2': 'Diocèse d\'origine (Lat)',
     'pays': 'Pays',
     'annee': 'Année',
     'durée_cause_mois': 'Durée (mois)',
@@ -97,13 +97,13 @@ let filteredData = [];
 let currentPage = 1;
 const rowsPerPage = 20;
 let sortColumn = null;
-let sortDirection = 'asc'; // 'asc' ou 'desc'
+let sortDirection = 'asc';
 
 // Colonnes exclues du tableau principal
 const excludeColumns = [
-    'diocese_origine',
-    'diocese_origine_lat',
-    'diocese_origine_lon', 
+    'diocese_origine_2',
+    'diocese_origine_lat_2',
+    'diocese_origine_lon',
     'nom_acteur_1_statut',
     'nom_acteur_2_statut',
     'nom_acteur_3_statut',
@@ -127,8 +127,8 @@ const excludeColumns = [
 
 // Colonnes exclues du popup modal
 const excludeModalColumns = [
-    'diocese_origine',
-    'diocese_origine_lat'
+    'diocese_origine_2',
+    'diocese_origine_lat_2'
 ];
 
 
@@ -153,7 +153,7 @@ async function loadCSV(filename) {
 function parseCSV(text) {
     const lines = text.split(/\r?\n/).filter(l => l.trim() !== '');
     if (lines.length === 0) return [];
-    
+
     const headers = parseLine(lines[0]);
 
     return lines.slice(1).map(line => {
@@ -197,30 +197,31 @@ function parseLine(line) {
 // Initialisation
 // =====================
 async function initData() {
-    allData = await loadCSV('../data/data.csv');
+    allData = await loadCSV('../data/disphistinq.csv');
     filteredData = [...allData];
 
-    const coordData = await loadCSV('../data/coordonnees.csv');
-
-    coordData.forEach(row => {
-        // Utiliser les noms de colonnes avec majuscules
-        if (row.Lieu && row.Latitude && row.Longitude) {
-            const lat = parseFloat(row.Latitude);
-            const lon = parseFloat(row.Longitude);
-            
-            // Vérifier que les coordonnées sont valides
-            if (!isNaN(lat) && !isNaN(lon)) {
-                const key = row.Lieu.trim().toLowerCase();
-                coordIndex[key] = {
-                    lat: lat,
-                    lon: lon
-                };
-                console.log(`✓ Coordonnées chargées: "${row.Lieu}" -> ${lat}, ${lon}`);
+    try {
+        const geo = await fetch('../data/carte_lat.geojson').then(r => r.json());
+        geo.features.forEach(f => {
+            const name = f.properties.diocese || f.properties.nom || '';
+            if (!name) return;
+            // Centroïde depuis la géométrie (Point ou Polygon)
+            let lat, lon;
+            if (f.geometry.type === 'Point') {
+                [lon, lat] = f.geometry.coordinates;
+            } else if (f.geometry.type === 'Polygon') {
+                [lon, lat] = f.geometry.coordinates[0][0];
+            } else if (f.geometry.type === 'MultiPolygon') {
+                [lon, lat] = f.geometry.coordinates[0][0][0];
             }
-        }
-    });
-
-    console.log('Index des coordonnées chargé:', Object.keys(coordIndex).length, 'villes');
+            if (lat != null && lon != null) {
+                coordIndex[name.trim().toLowerCase()] = { lat, lon };
+            }
+        });
+        console.log('Coordonnées chargées depuis GeoJSON :', Object.keys(coordIndex).length);
+    } catch (e) {
+        console.warn('Impossible de charger carte_lat.geojson :', e.message);
+    }
 }
 
 // =====================
@@ -232,46 +233,40 @@ function populateFilters() {
     const resultSelect = document.getElementById('filter-result');
 
     if (!heresySelect || !yearSelect || !resultSelect) return;
-    if (!allData.length) return; // Protection si pas de données
+    if (!allData.length) return;
 
-    // Détection automatique des colonnes
-    const heresyColumn = Object.keys(allData[0]).find(k => 
+    const heresyColumn = Object.keys(allData[0]).find(k =>
         k.toLowerCase().includes('heres') || k.toLowerCase().includes('heresy')
     ) || 'heresie';
-    
-    const yearColumn = Object.keys(allData[0]).find(k => 
+
+    const yearColumn = Object.keys(allData[0]).find(k =>
         k.toLowerCase().includes('annee') || k.toLowerCase().includes('year')
     ) || 'annee';
-    
-    const resultColumn = Object.keys(allData[0]).find(k => 
+
+    const resultColumn = Object.keys(allData[0]).find(k =>
         k.toLowerCase().includes('resultat') || k.toLowerCase().includes('result')
     ) || 'resultat_dispense';
 
-    // Stocker les noms de colonnes
     window.filterColumns = { heresyColumn, yearColumn, resultColumn };
 
-    // Peupler les sélecteurs
     const heresies = [...new Set(allData.map(d => d[heresyColumn]).filter(Boolean))].sort();
     heresies.forEach(v => {
         const option = document.createElement('option');
-        option.value = v;
-        option.textContent = v;
+        option.value = v; option.textContent = v;
         heresySelect.appendChild(option);
     });
 
     const years = [...new Set(allData.map(d => d[yearColumn]).filter(Boolean))].sort();
     years.forEach(v => {
         const option = document.createElement('option');
-        option.value = v;
-        option.textContent = v;
+        option.value = v; option.textContent = v;
         yearSelect.appendChild(option);
     });
 
     const results = [...new Set(allData.map(d => d[resultColumn]).filter(Boolean))].sort();
     results.forEach(v => {
         const option = document.createElement('option');
-        option.value = v;
-        option.textContent = v;
+        option.value = v; option.textContent = v;
         resultSelect.appendChild(option);
     });
 }
@@ -313,7 +308,6 @@ function filterData() {
 // Tableau
 // =====================
 function sortData(column) {
-    // Si on clique sur la même colonne, inverser la direction
     if (sortColumn === column) {
         sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
     } else {
@@ -325,18 +319,14 @@ function sortData(column) {
         let valA = a[column] || '';
         let valB = b[column] || '';
 
-        // Détecter si c'est un nombre
         const numA = parseFloat(valA);
         const numB = parseFloat(valB);
-        
+
         if (!isNaN(numA) && !isNaN(numB)) {
-            // Tri numérique
             return sortDirection === 'asc' ? numA - numB : numB - numA;
         } else {
-            // Tri alphabétique (insensible à la casse)
             valA = String(valA).toLowerCase();
             valB = String(valB).toLowerCase();
-            
             if (valA < valB) return sortDirection === 'asc' ? -1 : 1;
             if (valA > valB) return sortDirection === 'asc' ? 1 : -1;
             return 0;
@@ -363,27 +353,19 @@ function renderTable() {
 
     const headers = Object.keys(allData[0]).filter(h => !excludeColumns.includes(h));
 
-    // Créer les en-têtes avec libellés améliorés et indicateurs de tri
+    const wideKeys = new Set(['source', 'cause_de_demande', 'nom_requerant.e', 'type_de_dispense_harmonise']);
+
     headerRow.innerHTML = headers.map(h => {
         const label = getHeaderLabel(h);
-        const wideClass = (h === 'source' || h === 'cause_de_demande' || h === 'nom_requerant.e' || h === 'type_de_dispense_harmonise') ? 'class="wide-col sortable"' : 'class="sortable"';
-        
-        // Ajouter un indicateur de tri si cette colonne est triée
-        let sortIndicator = '';
-        if (sortColumn === h) {
-            sortIndicator = sortDirection === 'asc' ? ' ▲' : ' ▼';
-        }
-        
-        return `<th ${wideClass} data-column="${escapeHtml(h)}">${escapeHtml(label)}${sortIndicator}</th>`;
+        const isWide = wideKeys.has(h);
+        const classes = ['sortable', isWide ? 'wide-col' : ''].filter(Boolean).join(' ');
+        const sortMark = sortColumn === h ? (sortDirection === 'asc' ? ' ▲' : ' ▼') : '';
+        return `<th class="${classes}" data-column="${escapeHtml(h)}">${escapeHtml(label)}${sortMark}</th>`;
     }).join('');
 
-    // Ajouter les écouteurs d'événements sur les en-têtes
     headerRow.querySelectorAll('th.sortable').forEach(th => {
         th.style.cursor = 'pointer';
-        th.addEventListener('click', () => {
-            const column = th.dataset.column;
-            sortData(column);
-        });
+        th.addEventListener('click', () => sortData(th.dataset.column));
     });
 
     const start = (currentPage - 1) * rowsPerPage;
@@ -398,19 +380,17 @@ function renderTable() {
     tbody.innerHTML = pageData.map((row, i) => `
         <tr class="clickable-row" data-index="${start + i}">
             ${headers.map(h => {
-                const wide = (h === 'source' || h === 'cause_de_demande' || h === 'nom_requerant.e' || h === 'type_de_dispense_harmonise') ? 'class="wide-col"' : '';
-                const value = row[h] || '';
-                // Tronquer le texte long et ajouter ...
-                const displayValue = value.length > 100 ? value.substring(0, 97) + '...' : value;
-                return `<td ${wide}>${escapeHtml(displayValue)}</td>`;
-            }).join('')}
+        const isWide = wideKeys.has(h);
+        const value = row[h] || '';
+        const display = value.length > 100 ? value.substring(0, 97) + '…' : value;
+        return `<td ${isWide ? 'class="wide-col"' : ''}>${escapeHtml(display)}</td>`;
+    }).join('')}
         </tr>
     `).join('');
 
     updatePagination();
 }
 
-// Fonction utilitaire pour échapper le HTML
 function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
@@ -439,24 +419,14 @@ function updatePagination() {
 document.addEventListener('click', e => {
     const row = e.target.closest('.clickable-row');
     if (!row) return;
-
-    const index = parseInt(row.dataset.index);
-    const data = filteredData[index];
-    
-    if (data) {
-        openCaseModal(data);
-    }
+    const data = filteredData[parseInt(row.dataset.index)];
+    if (data) openCaseModal(data);
 });
 
 function openCaseModal(row) {
     const existingModal = document.querySelector('.modal-overlay');
     if (existingModal) {
-        // Nettoyer la carte existante avant de supprimer
-        if (modalMap) {
-            modalMap.remove();
-            modalMap = null;
-            modalMarkers = [];
-        }
+        if (modalMap) { modalMap.remove(); modalMap = null; modalMarkers = []; }
         existingModal.remove();
     }
 
@@ -465,20 +435,19 @@ function openCaseModal(row) {
 
     const mapId = 'modal-map-' + Date.now();
 
-    // Titre principal : ID - Nom (Date)
-    const casId = row['cas-id'] || '';
+    // ── Titre ──────────────────────────────────────────────────
+    const casId = row['cas.id'] || '';
     const nomRequerant = row['nom_requerant.e'] || '';
     const annee = row['annee'] || '';
     const mainTitle = `${casId}${casId && nomRequerant ? ' — ' : ''}${nomRequerant}${annee ? ` (${annee})` : ''}`;
 
-    // Informations pour la carte
-    const dioceseOrigine = row['diocese_origine_fr'] || '';
+    // ── Infos carte ────────────────────────────────────────────
+    const dioceseOrigine = row['diocese_origine_fr_2'] || '';
     const pays = row['pays'] || '';
 
-    // Préparer les groupes d'informations dans l'ordre spécifié
+    // ── Champs ordonnés ────────────────────────────────────────
     const detailsInfo = [];
-    
-    // Ordre spécifique des champs
+
     const orderedFields = [
         { key: 'folio', label: 'Folio' },
         { key: 'nom_requerant.e', label: 'Requérant·e' },
@@ -495,61 +464,40 @@ function openCaseModal(row) {
         { key: 'demandes_multiples', label: 'Demandes multiples' }
     ];
 
-    // Ajouter les champs ordonnés
     orderedFields.forEach(({ key, label, isLong }) => {
         if (row[key] && row[key].toString().trim() !== '') {
             detailsInfo.push({ label, value: row[key], isLong });
         }
     });
 
-    // Ajouter les autres champs (acteurs, documents, etc.)
     const additionalFields = [
         'nombre_acteurs_ext',
-        'nom_acteur_1_statut',
-        'nom_acteur_2_statut',
-        'nom_acteur_3_statut',
-        'nom_acteur_4_statut',
-        'nom_acteur_5_statut',
-        'nom_acteur_6_statut',
-        'nom_acteur_7_statut',
-        'nom_acteur_8_statut',
-        'nom_acteur_9_statut',
-        'nom_acteur_10_statut',
-        'nom_acteur_11_statut',
+        'nom_acteur_1_statut', 'nom_acteur_2_statut', 'nom_acteur_3_statut',
+        'nom_acteur_4_statut', 'nom_acteur_5_statut', 'nom_acteur_6_statut',
+        'nom_acteur_7_statut', 'nom_acteur_8_statut', 'nom_acteur_9_statut',
+        'nom_acteur_10_statut', 'nom_acteur_11_statut',
         'documents_annexes',
-        'Nature_doc_1',
-        'Nature_doc_2',
-        'Nature_doc_3',
-        'Nature_doc_4',
-        'Nature_doc_5',
-        'Nature_doc_6',
-        'Nature_doc_7'
+        'Nature_doc_1', 'Nature_doc_2', 'Nature_doc_3', 'Nature_doc_4',
+        'Nature_doc_5', 'Nature_doc_6', 'Nature_doc_7'
     ];
 
     additionalFields.forEach(key => {
         if (row[key] && row[key].toString().trim() !== '' && !excludeModalColumns.includes(key)) {
-            const label = getHeaderLabel(key);
-            detailsInfo.push({ label, value: row[key], isLong: false });
+            detailsInfo.push({ label: getHeaderLabel(key), value: row[key], isLong: false });
         }
     });
 
-    // Générer le HTML des détails
-    const detailsHTML = detailsInfo.map(({ label, value, isLong }) => {
-        if (isLong) {
-            return `
-                <div class="detail-item detail-item-long">
-                    <div class="detail-label">${escapeHtml(label)}</div>
-                    <div class="detail-value">${escapeHtml(String(value))}</div>
-                </div>
-            `;
-        }
-        return `
-            <div class="detail-item">
-                <span class="detail-label">${escapeHtml(label)}</span>
-                <span class="detail-value">${escapeHtml(String(value))}</span>
-            </div>
-        `;
-    }).join('');
+    // ── HTML détails ───────────────────────────────────────────
+    const detailsHTML = detailsInfo.map(({ label, value, isLong }) => isLong
+        ? `<div class="detail-item detail-item-long">
+               <div class="detail-label">${escapeHtml(label)}</div>
+               <div class="detail-value">${escapeHtml(String(value))}</div>
+           </div>`
+        : `<div class="detail-item">
+               <span class="detail-label">${escapeHtml(label)}</span>
+               <span class="detail-value">${escapeHtml(String(value))}</span>
+           </div>`
+    ).join('');
 
     modal.innerHTML = `
         <div class="modal-overlay-bg"></div>
@@ -561,80 +509,59 @@ function openCaseModal(row) {
             <div class="modal-body">
                 <div class="modal-left">
                     <div class="section-title">Détails</div>
-                    <div class="details-grid">
-                        ${detailsHTML}
-                    </div>
+                    <div class="details-grid">${detailsHTML}</div>
                 </div>
                 <div class="modal-right">
                     <div class="section-title">Carte d'origine</div>
-                    ${dioceseOrigine ? `<div class="map-info"><span class="map-info-label">Diocèse d'origine :</span> <span class="map-info-value">${escapeHtml(dioceseOrigine)}</span></div>` : ''}
-                    ${pays ? `<div class="map-info"><span class="map-info-label">Pays :</span> <span class="map-info-value">${escapeHtml(pays)}</span></div>` : ''}
+                    ${dioceseOrigine
+            ? `<div class="map-info"><span class="map-info-label">Diocèse d'origine :</span> <span class="map-info-value">${escapeHtml(dioceseOrigine)}</span></div>`
+            : ''}
+                    ${pays
+            ? `<div class="map-info"><span class="map-info-label">Pays :</span> <span class="map-info-value">${escapeHtml(pays)}</span></div>`
+            : ''}
                     <div class="modal-map-container">
-                        <div id="${mapId}" style="height: 100%; width: 100%; border-radius: 8px;"></div>
+                        <div id="${mapId}" style="height:100%;width:100%;border-radius:8px;"></div>
                     </div>
                 </div>
             </div>
-        </div>
-    `;
+        </div>`;
 
     document.body.appendChild(modal);
 
     const closeModal = () => {
-        if (modalMap) {
-            modalMap.remove();
-            modalMap = null;
-            modalMarkers = [];
-        }
+        if (modalMap) { modalMap.remove(); modalMap = null; modalMarkers = []; }
         modal.remove();
     };
 
     modal.querySelector('.modal-close').onclick = closeModal;
-    
-    // Fermer en cliquant sur l'overlay
     modal.querySelector('.modal-overlay-bg').addEventListener('click', closeModal);
 
-    // Fermer avec la touche Échap
-    const handleEscape = (e) => {
-        if (e.key === 'Escape') {
-            closeModal();
-            document.removeEventListener('keydown', handleEscape);
-        }
+    const handleEscape = e => {
+        if (e.key === 'Escape') { closeModal(); document.removeEventListener('keydown', handleEscape); }
     };
     document.addEventListener('keydown', handleEscape);
 
     setTimeout(() => initModalMap(row, mapId), 150);
 }
 
+// =====================
+// CARTE MODALE
+// =====================
 async function resolvePlace(place) {
     const key = place.toLowerCase().trim();
 
-    // 1️⃣ CSV local
     if (coordIndex[key]) {
-        return {
-            lat: coordIndex[key].lat,
-            lon: coordIndex[key].lon,
-            label: place
-        };
+        return { lat: coordIndex[key].lat, lon: coordIndex[key].lon, label: place };
     }
 
-    // 2️⃣ Fallback Nominatim avec gestion d'erreur
     try {
         const res = await fetch(
             `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(place)}`,
-            {
-                headers: {
-                    'User-Agent': 'HistoricalDataApp/1.0' // Nominatim requiert un User-Agent
-                }
-            }
+            { headers: { 'User-Agent': 'HistoricalDataApp/1.0' } }
         ).then(r => r.json());
 
         if (!res || !res.length) return null;
-
-        return {
-            lat: parseFloat(res[0].lat),
-            lon: parseFloat(res[0].lon),
-            label: res[0].display_name
-        };
+        return { lat: parseFloat(res[0].lat), lon: parseFloat(res[0].lon), label: res[0].display_name };
     } catch (error) {
         console.error(`Erreur lors de la résolution de "${place}":`, error);
         return null;
@@ -642,58 +569,39 @@ async function resolvePlace(place) {
 }
 
 async function initModalMap(row, mapId) {
-    // Supprimer l'ancienne carte si elle existe
-    if (modalMap) {
-        modalMap.remove();
-        modalMap = null;
-        modalMarkers = [];
-    }
+    if (modalMap) { modalMap.remove(); modalMap = null; modalMarkers = []; }
 
     modalMap = L.map(mapId);
-
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '© OpenStreetMap'
     }).addTo(modalMap);
 
+    // ── Colonne mise à jour : diocese_origine_fr_2 ─────────────
     const placeRaw =
-        row.diocese_origine_fr ||
-        row.diocese_origine ||
+        row.diocese_origine_fr_2 ||
+        row.diocese_origine_2 ||
         row.pays;
 
     if (!placeRaw) return;
 
-    const places = placeRaw
-        .split(',')
-        .map(p => p.trim())
-        .filter(Boolean);
-
+    const places = placeRaw.split(',').map(p => p.trim()).filter(Boolean);
     const bounds = [];
 
-    // Parcourir toutes les places avec resolvePlace()
     for (const place of places) {
         const resolved = await resolvePlace(place);
-        if (!resolved) return;
+        if (!resolved) continue;
 
         const coords = [resolved.lat, resolved.lon];
-
-        const marker = L.marker(coords)
-            .addTo(modalMap)
-            .bindPopup(resolved.label);
-
+        const marker = L.marker(coords).addTo(modalMap).bindPopup(resolved.label);
         modalMarkers.push(marker);
         bounds.push(coords);
 
-        // Définir un zoom par défaut selon le lieu
-        let zoom = 7; // zoom normal
-        const lowerPlace = place.toLowerCase();
-        if (
-            lowerPlace.includes("amérique") ||
-            lowerPlace.includes("france") ||
-            lowerPlace.includes("allemagne") ||
-            lowerPlace.includes("angleterre") ||
-            lowerPlace.startsWith("province")
-        ) {
-            zoom = 5; // moins zoomé pour les pays ou régions larges
+        let zoom = 7;
+        const lp = place.toLowerCase();
+        if (lp.includes('amérique') || lp.includes('france') ||
+            lp.includes('allemagne') || lp.includes('angleterre') ||
+            lp.startsWith('province')) {
+            zoom = 5;
         }
 
         if (bounds.length > 1) {

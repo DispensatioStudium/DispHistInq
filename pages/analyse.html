@@ -1,52 +1,92 @@
 <!DOCTYPE html>
 <html lang="fr">
+
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DispHistInq – Analyse les données</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DispHistInq – Analyse</title>
 
-  <!-- CSS principal -->
-  <link rel="stylesheet" href="../assets/style.css">
-
-  <!-- Leaflet -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-  />
-  <script
-    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-    defer
-  ></script>
-
-  <script src="../assets/script-aut.js"></script>
+    href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=IM+Fell+English+SC&family=Lato:wght@300;400&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="../assets/style.css" />
+  <script src="../assets/aut.js"></script>
 
 </head>
+
 <body>
-  <div class="container">
 
-    <header>
-      <h1 id="site-title" style="cursor: pointer;">DispHistInq</h1>
-      <p class="subtitle">Analyse des données</p>
-    </header>
+  <!-- ── PANNEAU GAUCHE ──────────────────────────────────────── -->
+  <div id="left-panel">
 
-    <nav class="tabs">
-      <a class="tab-button" href="../index.html">Accueil</a>
-      <a class="tab-button" href="donnees.html">Explorer les données</a>
-      <a class="tab-button" href="carte.html">Carte géographique</a>
-      <a class="tab-button active" href="analyse.html">Analyse</a>
+    <div id="left-header">
+      <h1 onclick="location.href='../index.html'">DispHistInq</h1>
+      <p>Les dispenses historiques de l'Inquisition<br />xvii<sup>e</sup>–xviii<sup>e</sup> siècle</p>
+    </div>
+
+    <span class="ornament">✦ ✦ ✦</span>
+
+    <nav id="left-nav">
+      <div class="nav-section-label">Navigation</div>
+
+      <a class="nav-link" href="../index.html">
+        <span class="nav-icon">⌂</span>Accueil
+      </a>
+      <a class="nav-link" href="donnees.html">
+        <span class="nav-icon">☰</span>
+        Explorer les données
+      </a>
+      <a class="nav-link" href="carte.html">
+        <span class="nav-icon">◎</span>Carte temporelle
+      </a>
+
     </nav>
 
-    <main>
-    <h2>Évolution chronologique des cas</h2>
-    <canvas id="chartChrono" width="800" height="400"></canvas>
-    </main>
+    <div id="left-footer">
+      <p>Projet d'histoire numérique<br>sur les dispenses accordées par<br>le Saint-Office, 1600–1750.</p>
+    </div>
 
-    <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  </div>
 
-    <!-- Script analyse -->
-    <script src="../assets/script-analyse.js"></script>
-    <script src="../assets/script-titre.js"></script>
+  <!-- ── ZONE PRINCIPALE ─────────────────────────────────────── -->
+  <div id="main-content">
+
+    <div id="top-bar">
+      <span>Analyse · Visualisations statistiques</span>
+      <div id="data-badge">
+        <div class="badge-dot"></div>
+        <span id="badge-label">Chargement…</span>
+      </div>
+    </div>
+
+    <div id="scroll-area">
+
+      <p class="page-eyebrow">DispHistInq</p>
+      <h1 class="page-title">Analyse des données</h1>
+      <hr class="page-rule" />
+
+      <!-- ── Graphique 1 : chronologie ──────────────────────── -->
+      <div class="section-title">Évolution chronologique</div>
+
+      <div class="chart-block">
+        <div class="chart-title">Distribution annuelle des cas</div>
+        <div class="chart-subtitle">Nombre total de cas par année, dont ceux sans rapport documenté avec l'hérésie</div>
+        <div class="chart-wrap">
+          <canvas id="chartChrono"></canvas>
+        </div>
+      </div>
+
+    </div><!-- /scroll-area -->
+
+  </div><!-- /main-content -->
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Script analyse -->
+  <script src="../assets/analyse.js"></script>
 
 </body>
+
 </html>

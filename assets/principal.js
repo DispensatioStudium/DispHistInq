@@ -4,7 +4,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 async function loadStats() {
   try {
-    const response = await fetch("data/data.csv");
+    const response = await fetch("data/disphistinq.csv");
     if (!response.ok) {
       throw new Error("Impossible de charger le fichier CSV");
     }
@@ -20,7 +20,7 @@ async function loadStats() {
     // === STAT 2 : diocèses distincts ===
     const dioceses = new Set(
       rows
-        .map(row => row.diocese_origine_fr?.trim())
+        .map(row => row.diocese_origine_lat_2?.trim())
         .filter(val => val && val !== "Non documenté")
     );
 
@@ -57,4 +57,3 @@ function parseCSV(text) {
     return obj;
   });
 }
-
