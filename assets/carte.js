@@ -909,7 +909,7 @@ const DIO_ALIASES = {
   'harlemen':     'ultraiecten',   // Harlemen(sis)
   'trajecten':    'ultraiecten',   // Trajecten(sis)
   'middelburgen': 'ultraiecten',
-  'groningue':    'ultraiecten',
+  'groningen':    'ultraiecten',
   'daventrien':   'ultraiecten',   // Daventrien(sis)
   'leowarden':    'ultraiecten',   // Leowarden(sis)
 };
